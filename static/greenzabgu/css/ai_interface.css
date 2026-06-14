@@ -1,0 +1,136 @@
+/* ai_interface.css */
+.ai-module {
+    margin-bottom: 30px;
+}
+
+.ai-terminal {
+    background: #1e2a38;
+    color: #00cec9;
+    padding: 20px;
+    border-radius: 8px;
+    min-height: 150px;
+    font-family: 'Courier New', monospace;
+    margin-bottom: 20px;
+    overflow-y: auto;
+    max-height: 400px;
+    white-space: pre-wrap;
+}
+
+.ai-placeholder {
+    opacity: 0.7;
+    margin: 0;
+}
+
+.ai-response {
+    margin: 0;
+}
+
+.file-dropzone {
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    background: #f9f9f9;
+    margin-bottom: 15px;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.file-dropzone.drag-over {
+    background: #e3f2fd;
+    border-color: #2196f3;
+}
+
+.file-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+    margin-bottom: 15px;
+}
+
+.file-item {
+    background: #f0f0f0;
+    border-radius: 6px;
+    padding: 5px 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.file-item img.preview {
+    max-height: 30px;
+    max-width: 30px;
+    border-radius: 4px;
+}
+
+.remove-file {
+    cursor: pointer;
+    color: #e74c3c;
+    font-weight: bold;
+    margin-left: 5px;
+}
+
+.input-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.input-group input {
+    flex: 1;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+.btn {
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: none;
+}
+
+.btn--primary {
+    background: #2196f3;
+    color: white;
+}
+
+.btn--primary:hover {
+    background: #1976d2;
+}
+
+.btn--primary:disabled {
+    background: #b0bec5;
+    cursor: not-allowed;
+}
+
+.btn--danger {
+    background: #e74c3c;
+    color: white;
+}
+
+.btn--danger:hover {
+    background: #c0392b;
+}
+
+.spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

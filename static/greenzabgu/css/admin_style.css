@@ -1,0 +1,32 @@
+.content {
+    flex-direction: column;
+}
+
+.content-block-1 {
+    display: flex;
+    flex-direction: column;
+}
+
+.name-and-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.items {
+    display: grid; /* Сетка для блоков */
+    grid-template-columns: repeat(auto-fit, minmax(250px, 0.08fr));
+    /*grid-template-columns: repeat(auto-fit, minmax(100%, 1fr)); !* Автоматическое масштабирование *!*/
+    gap: 5px; /* Отступы между блоками */
+}
+
+.item {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    /*width: 256px;*/
+    /*height: 64px;*/
+    background-color: aqua;
+    border-radius: 10px;
+}

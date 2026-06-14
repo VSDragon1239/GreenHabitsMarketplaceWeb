@@ -1,0 +1,205 @@
+{% extends 'index/base_header.html' %}
+{% load static %}
+
+{% block title %}Web UI - Главная{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'webuiprojectgreenzabgu/css/index_style.css' %}">
+{% endblock %}
+
+{% block content_block_0 %}
+    <!-- Скрытие заголовка base.html, если необходимо -->
+{% endblock %}
+
+{% block content_block_1 %}
+    <div class="ppt-slide bg-white">
+        {% if user.is_authenticated %}
+            <div class="gradient-green min-h-[420px] flex flex-col items-center justify-center text-center px-12">
+                <h2 class="text-[48px] font-bold text-white title-font mb-6 leading-tight">
+                    Начни свои<br/>эко-привычки сегодня
+                </h2>
+                <p class="text-white text-lg mb-8 max-w-xl opacity-90">
+                    Выполняй эко-действия, получай баллы и обменивай их на бонусы от партнёров вуза
+                </p>
+                <div class="flex gap-4">
+                    <button class="bg-white text-green-700 px-8 py-3 rounded-full font-bold text-base shadow-xl hover:shadow-2xl transition">
+                        <a href="{% url 'profile' %}" class="text-gray-700 hover:text-green-600 font-medium text-base">Перейти
+                            в профиль</a>
+                    </button>
+                    <button class="border-2 border-white text-white px-8 py-3 rounded-full font-semibold text-base hover:bg-white hover:text-green-700 transition">
+                        Узнать больше
+                    </button>
+                </div>
+            </div>
+            <div id="how" class="px-12 py-12 bg-gray-50">
+                <h3 class="text-3xl font-bold text-center eco-green title-font mb-10">Как это работает</h3>
+                <div class="grid grid-cols-3 gap-6">
+                    <!-- Step 1 -->
+                    <div class="bg-white rounded-xl p-6 shadow-md text-center">
+                        <div class="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                            <i class="material-icons text-3xl eco-green">person_add</i>
+                        </div>
+                        <div class="text-4xl font-bold eco-green mb-2">01</div>
+                        <h4 class="text-lg font-semibold text-gray-800 mb-2">Регистрация</h4>
+                        <p class="text-sm text-gray-600">Отправь запрос и настрой свой профиль в приложении</p>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="bg-white rounded-xl p-6 shadow-md text-center">
+                        <div class="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                            <i class="material-icons text-3xl eco-green">eco</i>
+                        </div>
+                        <div class="text-4xl font-bold eco-green mb-2">02</div>
+                        <h4 class="text-lg font-semibold text-gray-800 mb-2">Выполняй действия</h4>
+                        <p class="text-sm text-gray-600">Сканируй QR, загружай фото, отслеживай шаги</p>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="bg-white rounded-xl p-6 shadow-md text-center">
+                        <div class="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                            <i class="material-icons text-3xl eco-green">card_giftcard</i>
+                        </div>
+                        <div class="text-4xl font-bold eco-green mb-2">03</div>
+                        <h4 class="text-lg font-semibold text-gray-800 mb-2">Получай награды</h4>
+                        <p class="text-sm text-gray-600">Обменивай баллы на скидки и бонусы партнёров</p>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="gradient-green min-h-[420px] flex flex-col items-center justify-center text-center px-12">
+                <h2 class="text-[48px] font-bold text-white title-font mb-6 leading-tight">
+                    Начни свои<br/>эко-привычки сегодня
+                </h2>
+                <p class="text-white text-lg mb-8 max-w-xl opacity-90">
+                    Выполняй эко-действия, получай баллы и обменивай их на бонусы от партнёров вуза
+                </p>
+                <div class="flex flex-col sm:flex-row items-center gap-4">
+                    <!-- Блок главных кнопок -->
+                    <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                        <a href="{% url 'login' %}"
+                           class="inline-flex justify-center items-center bg-white text-gray-700 hover:text-green-600 px-6 py-3 rounded-full font-bold text-base shadow-lg hover:shadow-xl transition-all duration-200 text-center">
+                            Войти в аккаунт
+                        </a>
+                        <a href="{% url 'contacts' %}?action=register"
+                           class="inline-flex justify-center items-center bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-full font-bold text-base shadow-lg hover:shadow-xl transition-all duration-200 text-center">
+                            Зарегистрироваться
+                        </a>
+                    </div>
+
+                    <!-- Второстепенная кнопка -->
+                    <button class="w-full sm:w-auto border-2 border-white text-white px-8 py-3 rounded-full font-semibold text-base hover:bg-white hover:text-green-700 transition-all duration-200">
+                        Узнать больше
+                    </button>
+                </div>
+            </div>
+
+            <!-- How It Works Section -->
+            <div id="how" class="px-12 py-12 bg-gray-50">
+                <h3 class="text-3xl font-bold text-center eco-green title-font mb-10">Как это работает</h3>
+                <div class="grid grid-cols-3 gap-6">
+                    <!-- Step 1 -->
+                    <div class="bg-white rounded-xl p-6 shadow-md text-center">
+                        <div class="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                            <i class="material-icons text-3xl eco-green">person_add</i>
+                        </div>
+                        <div class="text-4xl font-bold eco-green mb-2">01</div>
+                        <h4 class="text-lg font-semibold text-gray-800 mb-2">Регистрация</h4>
+                        <p class="text-sm text-gray-600">Отправь запрос и настрой свой профиль в приложении</p>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="bg-white rounded-xl p-6 shadow-md text-center">
+                        <div class="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                            <i class="material-icons text-3xl eco-green">eco</i>
+                        </div>
+                        <div class="text-4xl font-bold eco-green mb-2">02</div>
+                        <h4 class="text-lg font-semibold text-gray-800 mb-2">Выполняй действия</h4>
+                        <p class="text-sm text-gray-600">Сканируй QR, загружай фото, отслеживай шаги</p>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="bg-white rounded-xl p-6 shadow-md text-center">
+                        <div class="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                            <i class="material-icons text-3xl eco-green">card_giftcard</i>
+                        </div>
+                        <div class="text-4xl font-bold eco-green mb-2">03</div>
+                        <h4 class="text-lg font-semibold text-gray-800 mb-2">Получай награды</h4>
+                        <p class="text-sm text-gray-600">Обменивай баллы на скидки и бонусы партнёров</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Benefits Section -->
+            <div id="benefits" class="px-12 py-12">
+                <h3 class="text-3xl font-bold text-center eco-green title-font mb-10">Почему стоит начать</h3>
+                <div class="space-y-5">
+                    <!-- Benefit 1 -->
+                    <div class="flex items-start bg-gradient-to-r from-green-50 to-white rounded-xl p-6 shadow-sm border-l-4 border-green-500">
+                        <div class="bg-green-100 rounded-full w-14 h-14 flex items-center justify-center mr-5 flex-shrink-0">
+                            <i class="material-icons text-2xl eco-green">emoji_events</i>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold text-gray-800 mb-2">Геймификация</h4>
+                            <p class="text-gray-600 text-base">Уровни, рейтинги и достижения - соревнуйся с друзьями и
+                                становись лидером</p>
+                        </div>
+                    </div>
+
+                    <!-- Benefit 2 -->
+                    <div class="flex items-start bg-gradient-to-r from-green-50 to-white rounded-xl p-6 shadow-sm border-l-4 border-green-500">
+                        <div class="bg-green-100 rounded-full w-14 h-14 flex items-center justify-center mr-5 flex-shrink-0">
+                            <i class="material-icons text-2xl eco-green">verified</i>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold text-gray-800 mb-2">Автоматическая верификация</h4>
+                            <p class="text-gray-600 text-base">ИИ-модуль проверяет твои эко-действия мгновенно - никаких
+                                долгих проверок</p>
+                        </div>
+                    </div>
+
+                    <!-- Benefit 3 -->
+                    <div class="flex items-start bg-gradient-to-r from-green-50 to-white rounded-xl p-6 shadow-sm border-l-4 border-green-500">
+                        <div class="bg-green-100 rounded-full w-14 h-14 flex items-center justify-center mr-5 flex-shrink-0">
+                            <i class="material-icons text-2xl eco-green">store</i>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold text-gray-800 mb-2">Партнёры вуза</h4>
+                            <p class="text-gray-600 text-base">Столовые, кафе и магазины - обменивай баллы на реальные
+                                бонусы</p>
+                        </div>
+                    </div>
+
+                    <!-- Benefit 4 -->
+                    <div class="flex items-start bg-gradient-to-r from-green-50 to-white rounded-xl p-6 shadow-sm border-l-4 border-green-500">
+                        <div class="bg-green-100 rounded-full w-14 h-14 flex items-center justify-center mr-5 flex-shrink-0">
+                            <i class="material-icons text-2xl eco-green">phone_android</i>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold text-gray-800 mb-2">Удобное приложение</h4>
+                            <p class="text-gray-600 text-base">Кроссплатформенное мобильное приложение с
+                                офлайн-режимом</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Section -->
+            <div class="gradient-green px-12 py-10">
+                <div class="grid grid-cols-3 gap-6 text-center text-white">
+                    <div>
+                        <div class="text-4xl font-bold mb-2">10 000+</div>
+                        <div class="text-base opacity-90">Студентов ЗабГУ</div>
+                    </div>
+                    <div>
+                        <div class="text-4xl font-bold mb-2">50+</div>
+                        <div class="text-base opacity-90">Партнёров вуза</div>
+                    </div>
+                    <div>
+                        <div class="text-4xl font-bold mb-2">100%</div>
+                        <div class="text-base opacity-90">Экологичный проект</div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

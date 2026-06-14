@@ -1,0 +1,43 @@
+body {
+    font-family: "Roboto", sans-serif;
+    background: #f5f5f5;
+    margin: 0;
+    padding: 0
+}
+
+.eco-green {
+    color: #2E7D32
+}
+
+.bg-eco-green {
+    background-color: #2E7D32
+}
+
+.title-font {
+    font-family: "Roboto Slab", serif
+}
+
+.gradient-green {
+    background: linear-gradient(135deg, #2E7D32 0%, #4CAF50 100%)
+}
+
+.progress-bar {
+    transition: width 0.8s ease
+}
+
+.task-card {
+    transition: all 0.3s ease
+}
+
+.task-card:hover {
+    transform: translatey(-2px);
+    box-shadow: 0 8px 16px rgba(46, 125, 50, 0.15)
+}
+
+.material-icons {
+    width: 1em
+}
+
+.material-icons {
+    direction: rtl
+}

@@ -1,0 +1,10 @@
+Django==5.1.4
+gunicorn==23.0.0
+psycopg2-binary==2.9.10
+pillow==11.2.1
+django-imagekit==5.0.0
+requests>=2.32.0
+docker==7.1.0
+urllib3>=2.0.0
+django_select2==8.4.8
+django-recaptcha==4.1.0

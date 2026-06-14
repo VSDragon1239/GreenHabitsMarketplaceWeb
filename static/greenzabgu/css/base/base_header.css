@@ -1,0 +1,39 @@
+/* ====== NOTIFICATION DROPDOWN ====== */
+#notif-toggle {
+    display: none;
+}
+
+#notif-toggle:checked ~ .notif-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+.notif-dropdown {
+    /* ВЫНОСИМ ИЗ ПОТОКА: это предотвращает расширение хедера */
+    position: absolute;
+    top: 100%; /* Прикрепляем прямо под кнопку колокольчика */
+    right: 0; /* Выравниваем по правому краю кнопки */
+    width: 320px; /* Фиксированная ширина, чтобы не растягивалось от контента */
+    z-index: 50; /* Чтобы выпадающее меню было поверх остальных элементов */
+
+    /* Ваши исходные стили анимации */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px) scale(0.97);
+    pointer-events: none;
+    transition: all 0.25s cubic-bezier(.4, 0, .2, 1);
+}
+
+.notif-item {
+    transition: background 0.15s ease;
+}
+
+.notif-item:hover {
+    background: #F1F8E9;
+}
+
+.notif-item.unread {
+    border-left: 3px solid #2E7D32;
+}

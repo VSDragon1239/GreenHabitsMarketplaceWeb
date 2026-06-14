@@ -1,0 +1,193 @@
+{% extends 'index/base.html' %}
+{% load static %}
+
+{% block title %}{% endblock %}
+
+{% block add_css_base_header %}
+    <link rel="stylesheet" href="{% static 'webuiprojectgreenzabgu/css/base/base_header.css' %}">{% endblock %}
+
+{% block header_block_1 %}
+    <div class="bg-white">
+        <div class="bg-white shadow-md px-8 py-3 flex items-center justify-between"
+             style="flex-shrink: 0">
+            <div class="flex items-center">
+                <a href="{% url 'green_main' %}" class="flex align-center items-center">
+                    <img src="{% static 'webuiprojectgreenzabgu/images/LogoMZP.png' %}"
+                         alt="Логотип" class="h-16 w-16 object-contain"/>
+                    <div class="ml-2.5">
+                        <div class="flex items-center gap-2">
+                            <h1 class="logo-title font-bold eco-green title-font leading-tight">Маркетплейс</h1>
+                            {% if user.is_authenticated %}
+                                {% if user.is_superuser %}
+                                    <span class="role-badge inline-block bg-orange-100 text-orange-700 font-bold px-2 py-0.5 rounded-full tracking-wide">АДМИНИСТРАТОР</span>
+                                {% elif user.groups.all %}
+                                    {% if "Партнеры" in user.groups.all|stringformat:"s" %}
+                                        <span class="role-badge inline-block bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded-full tracking-wide">ПАРТНЕР</span>
+                                    {% else %}
+                                        <span class="role-badge inline-block bg-green-100 text-green-700 font-bold px-2 py-0.5 rounded-full tracking-wide">УЧАСТНИК</span>
+                                    {% endif %}
+                                {% endif %}
+                            {% else %}
+                                <span class="role-badge inline-block bg-red-100 text-red-700 font-bold px-2 py-0.5 rounded-full tracking-wide">НЕ АВТОРИЗОВАН</span>
+                            {% endif %}
+                        </div>
+                        <p class="logo-sub text-gray-500 font-medium tracking-wide">Зелёных Привычек</p>
+                    </div>
+                </a>
+            </div>
+            <div class="flex items-center gap-4">
+                {% if user.is_authenticated %}
+                    {% if user.is_superuser %}
+                        <a href="{% url 'administrations' %}"
+                           class="nav-link text-gray-600 font-medium text-sm">Запросы</a>
+                        <a href="#" class="nav-link text-gray-600 font-medium text-sm">Пользователи</a>
+                        <a href="#" class="nav-link text-gray-600 font-medium text-sm">Отчётность</a>
+                        <a href="{% url 'admin' %}"
+                           class="nav-link text-gray-600 font-medium text-sm">Администрирование</a>
+                        <a href="{% url 'marketplace' %}"
+                           class="nav-link text-gray-600 font-medium text-sm">Маркетплейс</a>
+                    {% else %}
+                        {% if request.resolver_match.url_name != 'profile' %}
+                            <a href="{% url 'profile' %}"
+                               class="text-gray-700 hover:text-green-600 font-medium text-base">
+                                Профиль
+                            </a>
+                        {% endif %}
+                        {% if request.resolver_match.url_name != 'eco_tasks_tracker' %}
+                            <a href="{% url 'eco_tasks_tracker' %}"
+                               class="text-gray-700 hover:text-green-600 font-medium text-base">
+                                Задания
+                            </a>
+                        {% endif %}
+                        {% if request.resolver_match.url_name != 'eco_habits_tracker' %}
+                            <a href="{% url 'eco_habits_tracker' %}"
+                               class="text-gray-700 hover:text-green-600 font-medium text-base">
+                                Привычки
+                            </a>
+                        {% endif %}
+                        {% if request.resolver_match.url_name != 'eco_bonus_list' %}
+                            <a href="{% url 'eco_bonus_list' %}"
+                               class="text-gray-700 hover:text-green-600 font-medium text-base">
+                                Бонусы
+                            </a>
+                        {% endif %}
+                        {% if request.resolver_match.url_name != 'marketplace' %}
+                            <a href="{% url 'marketplace' %}"
+                               class="text-gray-700 hover:text-green-600 font-medium text-base">
+                                Маркетплейс
+                            </a>
+                        {% endif %}
+                        {% if request.resolver_match.url_name != 'rating_board' %}
+                            <a href="{% url 'rating_board' %}"
+                               class="text-gray-700 hover:text-green-600 font-medium text-base">
+                                Рейтинг
+                            </a>
+                        {% endif %}
+                        {% if request.resolver_match.url_name != 'events' %}
+                            <a href="{% url 'events' pk=1 %}"
+                               class="text-gray-700 hover:text-green-600 font-medium text-base">
+                                События
+                            </a>
+                        {% endif %}
+                    {% endif %}
+
+                    <div class="relative">
+                        <input type="checkbox" id="notif-toggle"/>
+                        <label for="notif-toggle"
+                               class="btn-bell gradient-green text-white w-10 h-10 rounded-full flex items-center justify-center shadow-md cursor-pointer"
+                               aria-label="Уведомления">
+                            <i class="material-icons text-lg">notifications</i>
+                            <span class="bell-dot"></span>
+                        </label>
+                        <div class="notif-dropdown bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
+                            <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                                <span class="font-bold text-gray-800 text-sm">Уведомления</span>
+                                <span class="text-xs text-green-600 font-semibold cursor-pointer hover:underline">Прочитать все</span>
+                            </div>
+                            <div class="max-h-64 overflow-y-auto">
+                                <div class="notif-item unread px-4 py-3 cursor-pointer">
+                                    <div class="flex items-start gap-3">
+                                        <div class="w-8 h-8 rounded-full badge-pending flex items-center justify-center flex-shrink-0">
+                                            <i class="material-icons text-sm">person_add</i>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm text-gray-800 font-medium">Новый запрос на регистрацию</p>
+                                            <p class="text-xs text-gray-400 mt-0.5">Иванов А.С. — ФКНТ</p>
+                                            <p class="text-xs text-gray-400">2 мин назад</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="notif-item unread px-4 py-3 cursor-pointer">
+                                    <div class="flex items-start gap-3">
+                                        <div class="w-8 h-8 rounded-full badge-verified flex items-center justify-center flex-shrink-0">
+                                            <i class="material-icons text-sm">check_circle</i>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm text-gray-800 font-medium">Данные отправлены студенту</p>
+                                            <p class="text-xs text-gray-400 mt-0.5">Петрова М.И. — email отправлен</p>
+                                            <p class="text-xs text-gray-400">15 мин назад</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="notif-item px-4 py-3 cursor-pointer">
+                                    <div class="flex items-start gap-3">
+                                        <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+                                            <i class="material-icons text-sm text-gray-400">info</i>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm text-gray-500">5 запросов ожидают проверки</p>
+                                            <p class="text-xs text-gray-400 mt-0.5">1 час назад</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                {% else %}
+                    <a href="{% url 'green_main' %}#how"
+                       class="text-gray-700 hover:text-green-600 font-medium text-base">Как это работает</a>
+                    <a href="{% url 'green_main' %}#benefits"
+                       class="text-gray-700 hover:text-green-600 font-medium text-base">Преимущества</a>
+                    <a href="{% url 'contacts' %}"
+                       class="text-gray-700 hover:text-green-600 font-medium text-base">Контакты</a>
+                {% endif %}
+
+                {#                <button class="gradient-green text-white px-6 py-2 rounded-full font-semibold text-sm shadow-md hover:shadow-lg transition">#}
+                {#                    Начать#}
+                {#                </button>#}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block header_block_2 %}
+    {#    <div class="header-block-2">#}
+    {#        <a class="nav-content" href="{% url 'main' %}">#}
+    {#            <!-- Добавил стиль для логотипа: высота 50px, чтобы влезал в хедер -->#}
+    {#            <img src="{% static 'images/zabgu.png' %}" alt="Logo" style="height: 100px; width: auto;">#}
+    {#        </a>#}
+    {#    </div>#}
+    {#    <!-- Убрал background_line и con-1, так как в base_header.css мы перешли на современную верстку без абсолютного позиционирования.#}
+    {#         Если они все еще нужны для старых стилей, верни их, но лучше положиться на CSS. -->#}
+{% endblock %}
+
+{% block header_block_3 %}
+    {#    <div class="header-block-3">#}
+    {#        <div class="nav-content">#}
+    {#            <a class="base-link link-3" href="{% url 'eco_habits_tracker' %}">#}
+    {#                <span>Трекер зелёных привычек...</span>#}
+    {#            </a>#}
+    {#            <a class="base-link link-3" href="{% url 'achievements' %}">#}
+    {#                <span>Достижения</span>#}
+    {#            </a>#}
+    {#            <a class="base-link link-1" href="{% url 'profile' %}">#}
+    {#                <span>Профиль</span>#}
+    {#            </a>#}
+    {#            <a class="base-link link-1" href="{% url 'profile' %}">#}
+    {#                <span>{{ user_eco_balance }} ECO</span>#}
+    {#            </a>#}
+    {#        </div>#}
+    {#    </div>#}
+{% endblock %}
