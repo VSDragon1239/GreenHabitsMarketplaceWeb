@@ -1,0 +1,42 @@
+{% extends "admin/change_form.html" %}
+{% load i18n %}
+
+{% block object-tools-items %}
+    {{ block.super }}
+
+    {% if original and original.status != 'approved' and original.status != 'cancelled' %}
+        <li>
+            <form action="" method="post" style="display:inline;">
+                {% csrf_token %}
+                <input type="hidden" name="_approve_task" value="1">
+                <button type="submit" class="button"
+                        style="background-color: #28a745; color: white; padding: 5px 10px; border-radius: 4px; border: none; cursor: pointer;">
+                    ✅ Одобрить и начислить ECO
+                </button>
+            </form>
+        </li>
+        <li>
+            <form action="" method="post" style="display:inline;">
+                {% csrf_token %}
+                <input type="hidden" name="_reject_task" value="1">
+                <button type="submit" class="button"
+                        style="background-color: #dc3545; color: white; padding: 5px 10px; border-radius: 4px; border: none; cursor: pointer;">
+                    ❌ Отклонить
+                </button>
+            </form>
+        </li>
+    {% endif %}
+
+    {% if original and original.status == 'approved' %}
+        <li>
+            <form action="" method="post" style="display:inline;">
+                {% csrf_token %}
+                <input type="hidden" name="_cancel_task" value="1">
+                <button type="submit" class="button"
+                        style="background-color: #6c757d; color: white; padding: 5px 10px; border-radius: 4px; border: none; cursor: pointer;">
+                    🚫 Отменить и списать ECO
+                </button>
+            </form>
+        </li>
+    {% endif %}
+{% endblock %}
