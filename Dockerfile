@@ -25,7 +25,7 @@ RUN chmod +x /entrypoint.sh
 
 # Переменные окружения
 ENV PYTHONUNBUFFERED=1 \
-    DJANGO_SETTINGS_MODULE=MainWebUIProject.settings
+    DJANGO_SETTINGS_MODULE=MarketplaceGreenHabits.settings
 
 # Собираем статику
 RUN python manage.py collectstatic --noinput

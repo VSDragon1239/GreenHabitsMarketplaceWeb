@@ -1,5 +1,5 @@
 """
-WSGI config for MainWebUIProject project.
+WSGI config for MarketplaceGreenHabits project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
@@ -11,6 +11,6 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'MainWebUIProject.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'MarketplaceGreenHabits.settings')
 
 application = get_wsgi_application()

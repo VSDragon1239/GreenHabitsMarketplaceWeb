@@ -1,0 +1,398 @@
+w{% extends "index/base_header.html" %}
+{% load static %}
+
+{% block title %}Модерация запросов{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'administrations/registration_requests.css' %}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Roboto+Slab:wght@400;600;700&display=swap"
+          rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+{% endblock %}
+
+{% block content_block_0 %}{% endblock %}
+
+{% block content_block_1 %}
+    <div class="container mx-auto px-4 py-8">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-800 flex items-center gap-2">
+                <span class="material-icons text-green-600">manage_accounts</span>
+                Управление пользователями
+            </h1>
+            <button onclick="openModal()"
+                    class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow flex items-center gap-2 transition">
+                <span class="material-icons text-sm">add</span> Добавить пользователя
+            </button>
+        </div>
+
+        <!-- Таблица пользователей -->
+        <div class="bg-white rounded-xl shadow-md overflow-x-auto">
+            <table class="min-w-full leading-normal">
+                <thead>
+                <tr class="bg-gray-50 border-b border-gray-200">
+                    <th class="px-5 py-3 text-left font-semibold text-gray-600 uppercase text-sm">Пользователь</th>
+                    <th class="px-5 py-3 text-left font-semibold text-gray-600 uppercase text-sm">Роли</th>
+                    <th class="px-5 py-3 text-left font-semibold text-gray-600 uppercase text-sm">Баланс (ECO)</th>
+                    <th class="px-5 py-3 text-left font-semibold text-gray-600 uppercase text-sm">Статус</th>
+                    <th class="px-5 py-3 text-right font-semibold text-gray-600 uppercase text-sm">Действия</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for user in users %}
+                    <tr class="border-b border-gray-100 hover:bg-gray-50 transition" id="row-{{ user.id }}">
+                        <td class="px-5 py-5">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center mr-3 overflow-hidden border-2 border-green-100">
+                                    {% if user.profile.avatar %}
+                                        <img src="{{ user.profile.avatar.url }}" class="w-full h-full object-cover"
+                                             alt="">
+                                    {% else %}
+                                        <span class="material-icons text-gray-400">person</span>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <p class="text-gray-900 font-semibold whitespace-no-wrap">{{ user.get_full_name|default:user.username }}</p>
+                                    <p class="text-gray-500 text-xs">{{ user.email }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-5 py-5 text-sm">
+                            <div class="flex flex-wrap gap-1">
+                                {% for group in user.groups.all %}
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full font-medium">{{ group.name }}</span>
+                                {% empty %}
+                                    <span class="text-gray-400 text-xs">Нет роли</span>
+                                {% endfor %}
+                                {% if user.is_superuser %}
+                                    <span class="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full font-medium">Суперюзер</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-5 py-5 text-sm text-gray-900 font-semibold">
+                            {{ user.ecowallet.balance|default:0 }} ECO
+                        </td>
+                        <td class="px-5 py-5 text-sm">
+                            <span class="relative inline-block w-3 h-3 rounded-full {% if user.is_active %}bg-green-500{% else %}bg-red-500{% endif %} mr-2"></span>
+                            {% if user.is_active %}Активен{% else %}Заблокирован{% endif %}
+                        </td>
+                        <td class="px-5 py-5 text-right space-x-2">
+                            <button onclick='openModal({{ user.id }}, {{ user.groups.all|length }})'
+                                    class="text-indigo-600 hover:text-indigo-900 transition" title="Редактировать">
+                                <span class="material-icons">edit</span>
+                            </button>
+                            <button onclick="confirmDelete({{ user.id }}, '{{ user.username }}')"
+                                    class="text-red-500 hover:text-red-700 transition" title="Удалить">
+                                <span class="material-icons">delete_forever</span>
+                            </button>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Модальное окно Создания/Редактирования -->
+    <div id="userModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/50 transition-opacity" onclick="closeModal()"></div>
+        <div class="relative flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto z-10 transform transition-all">
+                <div class="p-6 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white rounded-t-2xl">
+                    <h2 id="modalTitle" class="text-xl font-bold text-gray-800">Новый пользователь</h2>
+                    <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                        <span class="material-icons">close</span>
+                    </button>
+                </div>
+                <form id="userForm" class="p-6 space-y-4" enctype="multipart/form-data">
+                    <input type="hidden" name="action" id="formAction" value="create">
+                    <input type="hidden" name="user_id" id="formUserId" value="">
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Логин (Email) *</label>
+                            <input type="text" name="username" id="f_username" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Пароль {% if not formUserId %}
+                                *{% else %}(оставьте пустым){% endif %}</label>
+                            <input type="password" name="password" id="f_password"
+                                   {% if not formUserId %}required{% endif %}
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Имя</label>
+                            <input type="text" name="first_name" id="f_first_name"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Фамилия</label>
+                            <input type="text" name="last_name" id="f_last_name"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Телефон</label>
+                            <input type="text" name="phone" id="f_phone"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Аватар</label>
+                            <input type="file" name="avatar" id="f_avatar" accept="image/*"
+                                   class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">О себе</label>
+                        <textarea name="description" id="f_description" rows="2"
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Роли (Группы)</label>
+                        <select name="groups" id="f_groups" multiple
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
+                            {% for group in all_groups %}
+                                <option value="{{ group.id }}">{{ group.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <p class="text-xs text-gray-400 mt-1">Удерживайте Ctrl (Cmd) для выбора нескольких</p>
+                    </div>
+
+                    <div class="flex items-center gap-6 pt-4 border-t">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" name="is_active" id="f_is_active" checked
+                                   class="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500">
+                            <span class="text-sm text-gray-700">Активен</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" name="is_staff" id="f_is_staff"
+                                   class="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500">
+                            <span class="text-sm text-gray-700">Доступ в админку (Staff)</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" name="is_superuser" id="f_is_superuser"
+                                   class="w-4 h-4 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500">
+                            <span class="text-sm text-gray-700">Суперюзер</span>
+                        </label>
+                    </div>
+
+                    <div class="flex justify-end gap-3 pt-4">
+                        <button type="button" onclick="closeModal()"
+                                class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium">
+                            Отмена
+                        </button>
+                        <button type="submit" id="submitBtn"
+                                class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium flex items-center gap-2">
+                            <span class="material-icons text-sm">save</span> Сохранить
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно Подтверждения Удаления -->
+    <div id="deleteModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/50" onclick="closeDeleteModal()"></div>
+        <div class="relative flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-2xl shadow-xl w-full max-w-md z-10 p-6 text-center">
+                <span class="material-icons text-red-500 text-5xl mb-4">warning</span>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Удалить пользователя?</h3>
+                <p class="text-gray-600 mb-6">Вы уверены, что хотите удалить <strong id="deleteUserName"></strong>? Это
+                    действие необратимо.</p>
+                <div class="flex justify-center gap-3">
+                    <button onclick="closeDeleteModal()"
+                            class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium">
+                        Отмена
+                    </button>
+                    <form id="deleteForm" method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="user_id" id="deleteUserId" value="">
+                        <button type="submit"
+                                class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium">
+                            Удалить
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast уведомления -->
+    <div id="toast"
+         class="fixed bottom-5 right-5 z-[100] hidden transform transition-all duration-500 translate-y-4 opacity-0">
+        <div class="bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3">
+            <span id="toastIcon" class="material-icons text-green-400">check_circle</span>
+            <span id="toastMessage" class="font-medium"></span>
+        </div>
+    </div>
+
+    <script>
+        // Данные пользователей для быстрого заполнения формы без доп. запросов к серверу
+        const usersData = {
+            {% for user in users %}
+                "{{ user.id }}": {
+                    username: "{{ user.username }}",
+                    first_name: "{{ user.first_name }}",
+                    last_name: "{{ user.last_name }}",
+                    email: "{{ user.email }}",
+                    phone: "{{ user.profile.phone }}",
+                    description: "{{ user.profile.description }}",
+                    is_active: {{ user.is_active|lower }},
+                    is_staff: {{ user.is_staff|lower }},
+                    is_superuser: {{ user.is_superuser|lower }},
+                    groups: [{% for g in user.groups.all %}{{ g.id }}{% if not forloop.last %}, {% endif %}{% endfor %}]
+                },
+            {% endfor %}
+        };
+
+        function openModal(userId = null) {
+            const modal = document.getElementById('userModal');
+            const title = document.getElementById('modalTitle');
+            const form = document.getElementById('userForm');
+            form.reset();
+            document.getElementById('f_groups').selectedIndex = -1; // Сброс multiple select
+
+            if (userId) {
+                title.textContent = 'Редактирование пользователя';
+                document.getElementById('formAction').value = 'edit';
+                document.getElementById('formUserId').value = userId;
+                document.getElementById('f_password').removeAttribute('required');
+
+                const data = usersData[userId];
+                if (data) {
+                    document.getElementById('f_username').value = data.username;
+                    document.getElementById('f_first_name').value = data.first_name;
+                    document.getElementById('f_last_name').value = data.last_name;
+                    document.getElementById('f_phone').value = data.phone;
+                    document.getElementById('f_description').value = data.description;
+                    document.getElementById('f_is_active').checked = data.is_active;
+                    document.getElementById('f_is_staff').checked = data.is_staff;
+                    document.getElementById('f_is_superuser').checked = data.is_superuser;
+
+                    // Выделение ролей в multiple select
+                    Array.from(document.getElementById('f_groups').options).forEach(opt => {
+                        opt.selected = data.groups.includes(parseInt(opt.value));
+                    });
+                }
+            } else {
+                title.textContent = 'Новый пользователь';
+                document.getElementById('formAction').value = 'create';
+                document.getElementById('formUserId').value = '';
+                document.getElementById('f_password').setAttribute('required', 'required');
+                document.getElementById('f_is_active').checked = true;
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('userModal').classList.add('hidden');
+        }
+
+        function confirmDelete(userId, username) {
+            document.getElementById('deleteUserId').value = userId;
+            document.getElementById('deleteUserName').textContent = username;
+            document.getElementById('deleteModal').classList.remove('hidden');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.add('hidden');
+        }
+
+        function showToast(message, isSuccess = true) {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toastIcon');
+            const msg = document.getElementById('toastMessage');
+
+            msg.textContent = message;
+            icon.textContent = isSuccess ? 'check_circle' : 'error';
+            icon.className = isSuccess ? 'material-icons text-green-400' : 'material-icons text-red-400';
+
+            toast.classList.remove('hidden', 'translate-y-4', 'opacity-0');
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-4', 'opacity-0');
+                setTimeout(() => toast.classList.add('hidden'), 500);
+            }, 3000);
+        }
+
+        // Обработка формы создания/редактирования
+        document.getElementById('userForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="animate-spin material-icons text-sm">refresh</span> Сохранение...';
+
+            const formData = new FormData(this);
+
+            fetch("{% url 'admin_users_management' %}", {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        closeModal();
+                        showToast(data.message, true);
+                        setTimeout(() => location.reload(), 1000); // Перезагрузка для обновления таблицы
+                    } else {
+                        showToast(data.error || 'Произошла ошибка', false);
+                    }
+                })
+                .catch(error => {
+                    showToast('Ошибка сети', false);
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<span class="material-icons text-sm">save</span> Сохранить';
+                });
+        });
+
+        // Обработка формы удаления
+        document.getElementById('deleteForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+
+            fetch("{% url 'admin_users_management' %}", {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        closeDeleteModal();
+                        showToast(data.message, true);
+                        // Анимированное удаление строки из таблицы
+                        const row = document.getElementById(`row-${formData.get('user_id')}`);
+                        if (row) {
+                            row.style.transition = 'opacity 0.5s, transform 0.5s';
+                            row.style.opacity = '0';
+                            row.style.transform = 'translateX(-20px)';
+                            setTimeout(() => row.remove(), 500);
+                        }
+                    } else {
+                        closeDeleteModal();
+                        showToast(data.error || 'Произошла ошибка', false);
+                    }
+                })
+                .catch(error => showToast('Ошибка сети', false));
+        });
+    </script>
+
+{% endblock %}

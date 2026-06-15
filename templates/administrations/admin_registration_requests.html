@@ -1,0 +1,175 @@
+{% extends 'index/base_header.html' %}
+{% load static %}
+
+{% block title %}Модерация запросов{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'administrations/registration_requests.css' %}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Roboto+Slab:wght@400;600;700&display=swap"
+          rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+{% endblock %}
+
+{% block content_block_0 %}{% endblock %}
+
+{% block content_block_1 %}
+    <div class="flex-1 content-area bg-gray-50 custom-scroll" style="overflow-y: auto;">
+
+        <!-- Stats (Динамические) -->
+        <div class="stats-grid grid grid-cols-2 md:grid-cols-4 mb-5">
+            <div class="stat-card bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="stat-num font-bold text-gray-800">{{ stats.new }}</div>
+                        <div class="stat-label text-gray-500 font-medium">Ожидают</div>
+                    </div>
+                    <div class="stat-icon rounded-xl badge-pending flex items-center justify-center"><i
+                            class="material-icons">schedule</i></div>
+                </div>
+            </div>
+            <div class="stat-card bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="stat-num font-bold eco-green">{{ stats.approved }}</div>
+                        <div class="stat-label text-gray-500 font-medium">Подтверждено</div>
+                    </div>
+                    <div class="stat-icon rounded-xl badge-verified flex items-center justify-center"><i
+                            class="material-icons">verified</i></div>
+                </div>
+            </div>
+            <div class="stat-card bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="stat-num font-bold text-red-600">{{ stats.rejected }}</div>
+                        <div class="stat-label text-gray-500 font-medium">Отклонено</div>
+                    </div>
+                    <div class="stat-icon rounded-xl badge-rejected flex items-center justify-center"><i
+                            class="material-icons">block</i></div>
+                </div>
+            </div>
+            <div class="stat-card bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="stat-num font-bold text-blue-600">{{ stats.total }}</div>
+                        <div class="stat-label text-gray-500 font-medium">Всего</div>
+                    </div>
+                    <div class="stat-icon rounded-xl badge-sent flex items-center justify-center"><i
+                            class="material-icons">list</i></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Requests List -->
+        <div class="space-y-3">
+            {% for req in requests %}
+
+                <div class="req-card bg-white rounded-2xl shadow-sm border border-gray-100
+                        {% if req.status == 'new' %}status-pending
+                        {% elif req.status == 'approved' %}status-verified
+                        {% else %}status-rejected opacity-75{% endif %}"
+                     id="req-card-{{ req.id }}">
+                    <div class="req-card-inner p-4">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-center gap-3">
+                                <!-- Аватар с инициалами -->
+                                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 initials"
+                                     data-name="{{ req.fio }}"></div>
+                                <div>
+                                    <h4 class="req-name font-bold text-gray-800 {% if req.status == 'rejected' %}line-through text-gray-500{% endif %}">{{ req.fio }}</h4>
+                                    <div class="req-detail flex items-center gap-2 text-gray-500 mt-0.5">
+                                        <span class="font-medium">{{ req.group }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Бейдж статуса -->
+                            <span class="{% if req.status == 'new' %}badge-pending
+                                     {% elif req.status == 'approved' %}badge-verified
+                                     {% else %}badge-rejected{% endif %}
+                                     text-xs font-bold px-2.5 py-1 rounded-full whitespace-nowrap">
+                            {% if req.status == 'new' %}Ожидает
+                            {% elif req.status == 'approved' %}Подтверждено
+                            {% else %}Отклонено{% endif %}
+                        </span>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4 text-sm">
+                            <div class="flex items-center gap-2 text-gray-600">
+                                <i class="material-icons text-gray-400" style="font-size: 16px;">phone</i>
+                                <span>{{ req.phone }}</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-gray-600">
+                                <i class="material-icons text-gray-400" style="font-size: 16px;">email</i>
+                                <span>{{ req.email }}</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <span class="req-detail text-gray-400 text-sm">{{ req.created_at|date:"d.m.Y, H:i" }}</span>
+
+                            {% if req.status == 'new' %}
+                                <div class="req-actions flex gap-2">
+                                    <button onclick="openModal({{ req.id }}, '{{ req.fio|escapejs }}', '{{ req.group|escapejs }}', '{{ req.email|escapejs }}')"
+                                            class="btn-approve px-4 py-2 rounded-xl font-semibold text-sm">
+                                        <i class="material-icons text-sm align-middle mr-1">check</i>Подтвердить
+                                    </button>
+                                    <button onclick="rejectRequest({{ req.id }})"
+                                            class="btn-reject px-4 py-2 rounded-xl font-semibold text-sm">
+                                        <i class="material-icons text-sm align-middle mr-1">close</i>Отклонить
+                                    </button>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+            {% empty %}
+                <div class="text-center py-10 text-gray-500">Нет заявок на регистрацию</div>
+            {% endfor %}
+        </div>
+
+        <!-- Единый всплывающий Modal для подтверждения -->
+        <div id="approveModal" class="fixed inset-0 bg-black/40 z-[300] flex items-center justify-center"
+             style="display: none;">
+            <div class="bg-white rounded-2xl shadow-2xl relative z-10 w-full max-w-md m-4">
+                <div class="flex items-center justify-between mb-4 p-5 border-b">
+                    <h3 class="font-bold text-gray-800 title-font">Подтверждение регистрации</h3>
+                    <button onclick="closeModal()"
+                            class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200">
+                        <i
+                                class="material-icons text-gray-500" style="font-size: 18px;">close</i></button>
+                </div>
+                <div class="p-5">
+                    <p class="text-sm text-gray-500 mb-4">При подтверждении логин и сгенерированный пароль будут
+                        отправлены
+                        студенту на почту.</p>
+                    <div class="bg-gray-50 rounded-xl p-4 mb-5 space-y-2 text-sm">
+                        <div class="flex justify-between"><span class="text-gray-500">ФИО:</span> <span
+                                class="font-medium"
+                                id="modal-fio"></span>
+                        </div>
+                        <div class="flex justify-between"><span class="text-gray-500">Группа:</span> <span
+                                class="font-medium" id="modal-group"></span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Email (Логин):</span> <span
+                                class="font-medium" id="modal-email"></span></div>
+                    </div>
+                    <div class="flex gap-3">
+                        <button id="btn-final-approve"
+                                class="btn-approve flex-1 py-3 rounded-xl font-semibold text-center">
+                            <i class="material-icons text-sm align-middle mr-1">send</i>Создать и отправить
+                        </button>
+                        <button onclick="closeModal()"
+                                class="btn-reject flex-1 py-3 rounded-xl font-semibold text-center">
+                            Отмена
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'administrations/registration_requests.js' %}" defer></script>
+{% endblock %}

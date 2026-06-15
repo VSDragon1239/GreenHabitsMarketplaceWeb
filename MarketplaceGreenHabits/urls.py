@@ -1,5 +1,5 @@
 """
-URL configuration for MainWebUIProject project.
+URL configuration for MarketplaceGreenHabits project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/5.2/topics/http/urls/
@@ -22,25 +22,21 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import RedirectView
 
-from WebUiProject.views import NoAccessView
+from apps.about.views import IndexView
+from apps.administrations.views import AdminDashBoardView, AdminUserManagementView, AdminAuthRequestsUsersView, \
+    ModerateRequestView, AdminCheckEcoTasksView, AdminCheckAiAntiFrodeEcoTasksView
+from apps.system.views import NoAccessView
 
 urlpatterns = [
-    path('', RedirectView.as_view(url='main/', permanent=True)),
-    path('admin/', RedirectView.as_view(url='sysadmin/', permanent=True), name='admin'),
-    path('admin/sysadmin/', admin.site.urls),
-    path('main/', include('WebUiProject.urls')),  # Доступ по адресу /main/, главная для всего...
-    path('main/green-zabgu/', include('WebUIProjectGreenZabGU.urls')),
-    # Доступ по адресу main/green-zabgu/, главная для МЗП
+    path('favicon.ico', RedirectView.as_view(url=settings.STATIC_URL + 'favicon.png')),
 
-    # Системные страницы
-    # path('upload-file/', UploadFileView.as_view(), name='upload_file'),
-    path('no-access/', NoAccessView.as_view(), name='no-access'),
+    path('', IndexView.as_view(), name="main"),
     path(
         'login/',
         LoginView.as_view(
-            template_name="webuiproject/pages/auth.html",
+            template_name="accounts/auth.html",
             redirect_authenticated_user=True,
-            next_page="/main/green-zabgu/profile/",
+            next_page="/profile/",
         ),
         name="login",
     ),
@@ -51,7 +47,35 @@ urlpatterns = [
         ),
         name="logout",
     ),
-    path('favicon.ico', RedirectView.as_view(url=settings.STATIC_URL + 'favicon.png')),
+
+    # ============================================================
+    #                      Администрирование
+    # ============================================================
+    path('no-access/', NoAccessView.as_view(), name="no-access"),
+    path('admin/', RedirectView.as_view(url='panel/', permanent=True), name='admin_panel'),
+    path('admin/panel/', admin.site.urls),
+    path('admin-dashboard/', AdminDashBoardView.as_view(), name="admin_dashboard"),
+    path('admin-auth-requests/', AdminAuthRequestsUsersView.as_view(), name="admin_registration_requests"),
+    path('admin/users/', AdminUserManagementView.as_view(), name='admin_users_management'),
+    path('api/moderate-request/<int:pk>/', ModerateRequestView.as_view(), name='api_moderate_request'),     # Управляет кнопками для заявок на регистрацию
+    path('admin/check/eco-tasks/', AdminCheckEcoTasksView.as_view(), name='admin_check_eco_tasks'),
+    path('admin/check/eco-tasks-ai/', AdminCheckAiAntiFrodeEcoTasksView.as_view(), name='admin_check_ai_frode_eco_tasks'),
+
+    # ============================================================
+    #                      Пользователи
+    # ============================================================
+    path('contacts/', IndexView.as_view(), name="contacts"),
+    path('profile/', IndexView.as_view(), name="profile"),
+
+    # ============================================================
+    #                      Маркетплейс
+    # ============================================================
+
+    path('marketplace/', IndexView.as_view(), name="marketplace"),
+
+    # ============================================================
+    #                      Спонсоры
+    # ============================================================
 ]
 
 if settings.DEBUG:

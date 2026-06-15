@@ -7,14 +7,14 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -d django_db -U django_user" ]
+      test: [ "CMD-SHELL", "pg_isready -d marketplacegh_db -U marketplacegh_user" ]
       interval: 5s
       timeout: 5s
       retries: 5
 
   web:
     build: .
-    command: gunicorn MainWebUIProject.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120 --reload
+    command: gunicorn MarketplaceGreenHabits.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120 --reload
     volumes:
       - ./:/app
       - static_volume:/app/staticfiles

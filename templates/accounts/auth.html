@@ -1,0 +1,43 @@
+{% extends 'old_index/old_header_base.html' %}
+{% load static %}
+
+{% block title %}СКБ КБ - Вход в аккаунт{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'accounts/forms.css' %}">
+{% endblock %}
+
+{% block content_block_0 %}
+    <h1><a href="{% url 'main' %}">ОТЛ</a>  ->  Вход в аккаунт</h1>
+{% endblock %}
+
+{% block content_block_01 %}
+    <div class="content-block-01">
+        <a class="base-link link-1 border-10" href="{% url 'contacts' %}">
+            <h1>Нет аккаунта, забыли пароль? - Пиши нам!</h1>
+        </a>
+    </div>
+{% endblock %}
+
+
+{% block content_block_1 %}
+    <div class="content_block_1">
+        <h1>Вход</h1>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+            <div>
+                {{ form.username.label_tag }}<br>
+                {{ form.username }}
+                {{ form.username.errors }}
+            </div>
+            <div>
+                {{ form.password.label_tag }}<br>
+                {{ form.password }}
+                {{ form.password.errors }}
+            </div>
+            <input type="hidden" name="next" value="{{ next }}"/>
+            <button type="submit">Войти</button>
+        </form>
+    </div>
+{% endblock %}

@@ -1,0 +1,110 @@
+{% extends 'old_index/old_header_base.html' %}
+{% load static %}
+
+{% block title %}ОТЛ - Доступ отсутствует...{% endblock %}
+
+{% block extra_css %}
+    <!--&lt;!&ndash;<link rel="stylesheet" href="{% static 'old_index/old_profile_style.css' %}">&ndash;&gt;--> 
+{% endblock %}
+
+{% block content_block_0 %}
+    <div class="container mt-4">
+        <!-- Хлебные крошки -->
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'main' %}">ОТЛ</a></li>
+                <li class="breadcrumb-item active text-danger fw-bold" aria-current="page">Отказано в доступе</li>
+            </ol>
+        </nav>
+    </div>
+{% endblock %}
+
+{% block content_block_01 %}
+    <!-- Скрытая форма для POST запроса выхода -->
+    <form id="logoutForm" method="post" action="{% url 'logout' %}" class="d-none">
+        {% csrf_token %}
+    </form>
+
+    <!-- Модальное окно Bootstrap 5 -->
+    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="logoutModalLabel">Подтверждение выхода</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Закрыть"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">Вы уверены, что хотите выйти из аккаунта?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <!-- Кнопка выхода -->
+                    <button type="button" class="btn btn-danger" id="confirmLogoutBtn">Выйти</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content_block_1 %}
+    <div class="container py-5">
+        <div class="d-flex flex-column flex-md-row justify-content-center align-items-center gap-3">
+
+{#            <!-- Разрываем цикличность: проверяем группу прямо в шаблоне -->#}
+{#            {% if request.user.is_authenticated and "Партнеры" in request.user.groups.all|stringformat:"s" or request.user.groups.filter.name == "Партнеры" %}#}
+{#                <!-- Если зашел Партнер, кнопка "Вернуться" сразу ведет в его личный кабинет -->#}
+{#                <a href="{% url 'partner_dashboard' %}" class="btn btn-primary btn-lg px-5 py-3 shadow-sm fw-bold">#}
+{#                    Перейти в кабинет Партнера#}
+{#                </a>#}
+{#            {% else %}#}
+{#                <!-- Для всех остальных пользователей оставляем стандартный возврат -->#}
+{#                <a href="{% url 'other' %}" class="btn btn-outline-primary btn-lg px-5 py-3 shadow-sm">#}
+{#                    Вернуться#}
+{#                </a>#}
+{#            {% endif %}#}
+
+            {% if is_partner %}
+                <a href="{% url 'partner_dashboard' %}" class="btn btn-primary btn-lg px-5 py-3 shadow-sm fw-bold">Перейти
+                    в кабинет Партнера</a>
+            {% else %}
+                <a href="{% url 'main' %}" class="btn btn-outline-primary btn-lg px-5 py-3 shadow-sm">Вернуться</a>
+            {% endif %}
+
+
+            <!-- Кнопка вызова модального окна -->
+            <button type="button"
+                    class="btn btn-outline-danger btn-lg px-5 py-3 shadow-sm"
+                    data-bs-toggle="modal"
+                    data-bs-target="#logoutModal">
+                Войти под другим аккаунтом
+            </button>
+
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <!-- 1. Подключаем Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- 2. ЛОГИКА ВЫХОДА (Ваш старый profile_script.js здесь НЕ НУЖЕН, его надо удалить) -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const confirmBtn = document.getElementById('confirmLogoutBtn');
+            const logoutForm = document.getElementById('logoutForm');
+
+            if (confirmBtn && logoutForm) {
+                confirmBtn.addEventListener('click', function () {
+                    // Отправляем формуlogout
+                    logoutForm.submit();
+                });
+            }
+
+            // Фикс "зависания" страницы: если вдруг класс modal-open остался на body при перезагрузке
+            document.body.classList.remove('modal-open');
+            // Удаляем возможные остатки бэкдропа
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        });
+    </script>
+{% endblock %}

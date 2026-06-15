@@ -1,0 +1,111 @@
+/* old_style.css */
+
+@font-face {
+    font-family: "KellySlab";
+    src: url("../fonts/KellySlab-Regular.ttf");
+    font-weight: normal;
+}
+
+@font-face {
+    font-family: "Jura";
+    src: url("../fonts/Jura.ttf");
+}
+
+/* Глобальный сброс и базовые настройки */
+* {
+    box-sizing: border-box; /* Чтобы padding не ломал ширину */
+}
+
+body {
+    font-family: "Jura", sans-serif; /* Jura более современный для основного текста */
+    background-color: #f0f2f5; /* Светло-серый фон для контраста с карточками */
+    margin: 0;
+    padding: 0;
+    color: #2d3436;
+    /* Легкий фоновый паттерн для "техно" вида */
+    background-image: radial-gradient(#dfe6e9 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+/* Заголовки */
+h1 {
+    font-family: "KellySlab", serif;
+    font-weight: normal;
+    text-align: center;
+    margin: 0;
+    padding: 3px 10px;
+    font-size: 24px;
+    color: #1e2a38; /* Темно-синий */
+}
+
+h3 {
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 1.5;
+    margin: 10px 0 0 0;
+}
+
+/* Ссылки */
+a {
+    color: #00cec9; /* Бирюзовый акцент */
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+a:hover {
+    color: #6c5ce7; /* Фиолетовый при наведении */
+}
+
+/* Инпуты и кнопки (база) */
+input, select {
+    font-family: "Jura", sans-serif;
+    border: 1px solid #dcdde1;
+    border-radius: 8px;
+    padding: 12px 15px;
+    font-size: 16px;
+    background-color: #ffffff;
+    color: #2d3436;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:focus, select:focus {
+    border-color: #00cec9;
+    box-shadow: 0 0 0 3px rgba(0, 206, 201, 0.2);
+}
+
+button {
+    font-family: "KellySlab", serif;
+    font-size: 16px;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    background-color: #1e2a38; /* Основной темный цвет */
+    color: white;
+    cursor: pointer;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+    width: auto; /* Убрал жесткую ширину 300px для адаптивности */
+    min-width: 150px;
+}
+
+button:hover {
+    background-color: #00cec9; /* Акцент при наведении */
+    color: #1e2a38;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 206, 201, 0.3);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+ul {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+p {
+    font-size: 18px;
+    line-height: 1.6;
+}

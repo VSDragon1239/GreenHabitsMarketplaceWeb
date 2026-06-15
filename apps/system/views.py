@@ -2,8 +2,9 @@ from django.shortcuts import render
 from django.views.generic import TemplateView
 
 
-class IndexView(TemplateView):
-    template_name = "about/index.html"
+# Create your views here.
+class NoAccessView(TemplateView):
+    template_name = "system/no_access.html"
 
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)

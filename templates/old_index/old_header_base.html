@@ -1,0 +1,50 @@
+{% extends 'old_index/old_base.html' %}
+{% load static %}
+
+{% block title %}{% endblock %}
+
+{% block add_css_base_header %}
+    <link rel="stylesheet" href="{% static 'old_index/old_base_header.css' %}">{% endblock %}
+
+{% block header_block_1 %}
+    <div class="header-block-1">
+        <div class="nav-content">
+            <a class="base-link link-3" href="{% url 'main' %}">
+                <span>Доступные задания</span>
+            </a>
+            <a class="base-link link-3" href="{% url 'main' %}">
+                <span>События и мероприятия</span>
+            </a>
+        </div>
+    </div>
+{% endblock %}
+
+{% block header_block_2 %}
+    <div class="header-block-2">
+        <a class="nav-content" href="{% url 'main' %}">
+            <!-- Добавил стиль для логотипа: высота 50px, чтобы влезал в хедер -->
+            <img src="{% static 'old_index/img/zabgu.png' %}" alt="Logo" style="height: 100px; width: auto;">
+        </a>
+    </div>
+    <!-- Убрал background_line и con-1, так как в base_header.css мы перешли на современную верстку без абсолютного позиционирования.
+         Если они все еще нужны для старых стилей, верни их, но лучше положиться на CSS. -->
+{% endblock %}
+
+{% block header_block_3 %}
+    <div class="header-block-3">
+        <div class="nav-content">
+            <a class="base-link link-3" href="{% url 'main' %}">
+                <span>Трекер зелёных привычек...</span>
+            </a>
+            <a class="base-link link-3" href="{% url 'main' %}">
+                <span>Достижения</span>
+            </a>
+            <a class="base-link link-1" href="{% url 'main' %}">
+                <span>Профиль</span>
+            </a>
+            <a class="base-link link-1" href="{% url 'main' %}">
+                <span>{{ user_eco_balance }} ECO</span>
+            </a>
+        </div>
+    </div>
+{% endblock %}
