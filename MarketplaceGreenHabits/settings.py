@@ -25,9 +25,13 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # DEBUG = os.getenv('DEBUG') == 'True'
 DEBUG = True
 
+# hosts = os.getenv(
+#     'DJANGO_ALLOWED_HOSTS',
+#     'localhost,127.0.0.1,[::1],194.87.214.67,192.168.100.196,10.0.2.2,10.23.120.101,greenhabits.site,www.greenhabits.site',  # добавь сюда свой реальный IP
+# )
+#
 hosts = os.getenv(
-    'DJANGO_ALLOWED_HOSTS',
-    'localhost,127.0.0.1,[::1],194.87.214.67,192.168.100.196,10.0.2.2,10.23.120.101,greenhabits.site,www.greenhabits.site',  # добавь сюда свой реальный IP
+    'DJANGO_ALLOWED_HOSTS', 'greenhabits.site,www.greenhabits.site',
 )
 ALLOWED_HOSTS = hosts.split(',')
 
