@@ -37,7 +37,7 @@ services:
       - static_volume:/usr/share/nginx/html/static:ro
       - media_volume:/usr/share/nginx/html/media:ro
       - ./deploy/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./deploy/ssl:/etc/nginx/ssl:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - web
 
