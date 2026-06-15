@@ -37,9 +37,11 @@ CSRF_TRUSTED_ORIGINS = [
     'https://localhost',
     'https://127.0.0.1',
     'https://192.168.100.196',
-    'https://10.0.2.2'
-    'https://10.23.120.101'
-    'http://10.23.120.101'
+    'https://10.0.2.2',
+    'https://10.23.120.101',
+    'http://10.23.120.101',
+    'https://greenhabits.site',
+    'https://www.greenhabits.site',
 ]
 
 # Application definition
