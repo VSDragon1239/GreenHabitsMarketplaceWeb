@@ -1,0 +1,107 @@
+{% extends 'index/base_header.html' %}
+{% load static %}
+
+{% block title %}МЗП - {{ task.title }}{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'administrations/registration_requests.css' %}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Roboto+Slab:wght@400;600;700&display=swap"
+          rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+{% endblock %}
+
+{% block content_block_0 %}
+    <h1>
+        МЗП ->
+        <a href="{% url 'eco_tasks_tracker' %}">Трекер заданий</a> ->
+        {{ task.title }}
+    </h1>
+{% endblock %}
+
+{% block content_block_1 %}
+    <div class="px-12 py-8 bg-gray-50">
+        <div class="max-w-2xl mx-auto">
+
+            <a href="{% url 'eco_tasks_tracker' %}"
+               class="inline-flex items-center text-gray-600 hover:text-green-600 mb-6 transition">
+                <i class="material-icons mr-1" style="font-size: 20px;">arrow_back</i> К списку заданий
+            </a>
+
+            <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                <div class="bg-gradient-to-r from-green-50 to-white p-6 border-b border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mr-4 flex-shrink-0">
+                                <i class="material-icons text-3xl eco-green">assignment</i>
+                            </div>
+                            <div>
+                                <h2 class="text-2xl font-bold text-gray-800">{{ task.title }}</h2>
+                                <p class="text-gray-500 text-sm">
+                                    {% if task.task_type %}{{ task.task_type.name }}{% else %}Честное слово{% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-3xl font-bold eco-green">+{{ task.reward }}</span>
+                            <div class="text-gray-500 text-xs">ECO</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6">
+                    <p class="text-gray-700 leading-relaxed text-lg mb-4">{{ task.description }}</p>
+
+                    <!-- БЛОК ФОРМЫ ДЛЯ ВВОДА ДОКАЗАТЕЛЬСТВ -->
+                    <div id="proof-section" class="hidden mt-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
+
+                        <!-- Если тип: Ввод кода -->
+                        <div id="input-text-code" class="hidden">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Введите код (или текст с
+                                QR-кода):</label>
+                            <label for="proof_text"></label><input type="text" id="proof_text" name="proof_text"
+                                                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none text-center text-lg font-mono tracking-widest"
+                                                                   placeholder="Например: ABC123" autocomplete="off">
+                        </div>
+
+                        <!-- Если тип: Фото -->
+                        <div id="input-photo" class="hidden">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Прикрепите фотографию:</label>
+                            <input type="file" id="proof_image" name="proof_image" accept="image/*"
+                                   capture="environment"
+                                   class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                            <p class="text-xs text-gray-400 mt-2">На мобильном устройстве откроется камера для съемки
+                                напрямую.</p>
+                            <img id="image-preview" src="#" alt="Preview"
+                                 class="hidden mt-4 max-h-48 rounded-lg shadow-md mx-auto">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6 bg-gray-50 border-t border-gray-100" id="action-area">
+                    {% if is_completed %}
+                        <div class="flex items-center bg-green-50 p-4 rounded-xl border border-green-200">
+                            <i class="material-icons text-3xl eco-green mr-4">check_circle</i>
+                            <div>
+                                <h4 class="font-bold text-gray-800">Задание выполнено!</h4>
+                                <p class="text-gray-600 text-sm">Эко-коины зачислены.</p>
+                            </div>
+                        </div>
+                    {% else %}
+                        <button class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-4 rounded-xl transition shadow-md flex items-center justify-center text-lg"
+                                id="complete-task-btn" data-task-id="{{ task.id }}"
+                                data-task-type="{{ task.task_type.code|default:'trust' }}">
+                            <i class="material-icons mr-2">bolt</i> Выполнить и получить награду
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    {% if not is_completed %}
+        <script src="{% static 'marketplace/eco_tasks_details.js' %}"></script>
+    {% endif %}
+{% endblock %}
