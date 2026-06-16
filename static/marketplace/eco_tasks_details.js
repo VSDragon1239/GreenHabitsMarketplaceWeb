@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function () {
             formData.append('proof_image', document.getElementById('proof_image').files[0]);
         }
 
-        fetch(`/main/green-zabgu/eco-tasks/complete/${taskId}/`, {
+        fetch(`/eco-tasks/complete/${taskId}/`, {
             method: 'POST',
             body: formData,
         })
