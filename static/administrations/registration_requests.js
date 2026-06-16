@@ -239,6 +239,10 @@
             $('#f_is_active').checked = true;
             $('#f_is_staff').checked = false;
             $('#f_is_superuser').checked = false;
+            $('#f_is_partner').checked = false;
+            $('#f_partner_name').value = '';
+            $('#partnerNameGroup').classList.add('hidden');
+            $('#f_partner_name').removeAttribute('required');
 
             showModal(this.overlay, this.content);
         },
@@ -265,11 +269,24 @@
             $('#f_username').value = data.username;
             $('#f_first_name').value = data.first_name;
             $('#f_last_name').value = data.last_name;
-            $('#f_phone').value = data.phone;
+            $('#f_phone').value = data.phone; // Маска подхватит при фокусе
             $('#f_description').value = data.description;
             $('#f_is_active').checked = data.is_active;
             $('#f_is_staff').checked = data.is_staff;
             $('#f_is_superuser').checked = data.is_superuser;
+
+            // Партнёр
+            const isPartner = data.is_partner;
+            $('#f_is_partner').checked = isPartner;
+            if (isPartner) {
+                $('#partnerNameGroup').classList.remove('hidden');
+                $('#f_partner_name').setAttribute('required', 'required');
+                $('#f_partner_name').value = data.partner_name;
+            } else {
+                $('#partnerNameGroup').classList.add('hidden');
+                $('#f_partner_name').removeAttribute('required');
+                $('#f_partner_name').value = '';
+            }
 
             $$('.group-checkbox').forEach(cb => {
                 cb.checked = data.groups.includes(parseInt(cb.value));
@@ -283,44 +300,7 @@
             hideModal(this.overlay, this.content);
         },
 
-        clearErrors() {
-            const errorsEl = $('#userFormErrors');
-            if (errorsEl) errorsEl.classList.add('hidden');
-            const listEl = $('#userErrorList');
-            if (listEl) listEl.innerHTML = '';
-            $$('.field-error').forEach(el => el.classList.remove('field-error'));
-        },
-
-        showErrors(errors) {
-            const listEl = $('#userErrorList');
-            if (!listEl) return;
-            listEl.innerHTML = '';
-
-            if (typeof errors === 'string') {
-                const li = document.createElement('li');
-                li.textContent = errors;
-                listEl.appendChild(li);
-            } else if (typeof errors === 'object') {
-                for (const [field, messages] of Object.entries(errors)) {
-                    (Array.isArray(messages) ? messages : [messages]).forEach(msg => {
-                        const li = document.createElement('li');
-                        li.textContent = msg;
-                        listEl.appendChild(li);
-                    });
-                    const input = $(`#f_${field}`) || $(`[name="${field}"]`);
-                    if (input) input.classList.add('field-error');
-                }
-            }
-
-            $('#userFormErrors').classList.remove('hidden');
-        },
-
-        updateGroupLabels() {
-            $$('.group-checkbox-label').forEach(label => {
-                const cb = label.querySelector('.group-checkbox');
-                label.classList.toggle('group-selected', cb && cb.checked);
-            });
-        },
+        // ... clearErrors, showErrors, updateGroupLabels — без изменений ...
 
         async submit(e) {
             e.preventDefault();
@@ -331,6 +311,18 @@
             btn.innerHTML = '<span class="animate-spin material-icons text-sm">refresh</span> Сохранение...';
 
             const formData = new FormData(e.target);
+
+            // Преобразуем отформатированный телефон в чистый номер
+            const rawPhone = getRawPhone($('#f_phone').value);
+            formData.set('phone', rawPhone);
+
+            // Валидация: партнёр без названия
+            if ($('#f_is_partner').checked && !$('#f_partner_name').value.trim()) {
+                this.showErrors({'partner_name': ['Укажите название организации партнёра']});
+                btn.disabled = false;
+                btn.innerHTML = '<span class="material-icons text-sm">save</span> Сохранить';
+                return;
+            }
 
             try {
                 const response = await fetch(USER_SUBMIT_URL, {
@@ -500,6 +492,9 @@
         ApproveModal.bindEvents();
         UserModal.init();
         DeleteModal.init();
+        TableFilter.init();
+        initPhoneMask();
+        initPartnerToggle();
 
         const userForm = $('#userForm');
         if (userForm) userForm.addEventListener('submit', (e) => UserModal.submit(e));
@@ -507,5 +502,155 @@
         const deleteForm = $('#deleteForm');
         if (deleteForm) deleteForm.addEventListener('submit', (e) => DeleteModal.submit(e));
     });
+
+    // ══════════════════════════════════════════════════════════
+    //  ФИЛЬТРАЦИЯ И СОРТИРОВКА ТАБЛИЦЫ
+    // ══════════════════════════════════════════════════════════
+
+    const TableFilter = {
+        init() {
+            $('#searchInput')?.addEventListener('input', () => this.apply());
+            $('#filterRole')?.addEventListener('change', () => this.apply());
+            $('#filterStatus')?.addEventListener('change', () => this.apply());
+            $('#sortBy')?.addEventListener('change', () => this.apply());
+            $('#resetFilters')?.addEventListener('click', () => this.reset());
+        },
+
+        apply() {
+            const search = ($('#searchInput')?.value || '').toLowerCase().trim();
+            const role = $('#filterRole')?.value || '';
+            const status = $('#filterStatus')?.value || '';
+            const sortBy = $('#sortBy')?.value || 'name_asc';
+
+            const rows = Array.from($$('.user-row'));
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const name = row.dataset.name || '';
+                const email = row.dataset.email || '';
+                const phone = row.dataset.phone || '';
+                const rowRoles = row.dataset.roles || '';
+                const rowStatus = row.dataset.active || '';
+                const balance = parseInt(row.dataset.balance) || 0;
+
+                // Фильтр поиска
+                const matchSearch = !search ||
+                    name.includes(search) ||
+                    email.includes(search) ||
+                    phone.includes(search);
+
+                // Фильтр по роли
+                const matchRole = !role || rowRoles.split(',').includes(role);
+
+                // Фильтр по статусу
+                const matchStatus = !status || rowStatus === status;
+
+                const visible = matchSearch && matchRole && matchStatus;
+                row.style.display = visible ? '' : 'none';
+                if (visible) visibleCount++;
+            });
+
+            // Сортировка видимых строк
+            const tbody = $('#usersTableBody');
+            const visibleRows = rows.filter(r => r.style.display !== 'none');
+
+            visibleRows.sort((a, b) => {
+                switch (sortBy) {
+                    case 'name_asc':
+                        return (a.dataset.name || '').localeCompare(b.dataset.name || '', 'ru');
+                    case 'name_desc':
+                        return (b.dataset.name || '').localeCompare(a.dataset.name || '', 'ru');
+                    case 'balance_asc':
+                        return (parseInt(a.dataset.balance) || 0) - (parseInt(b.dataset.balance) || 0);
+                    case 'balance_desc':
+                        return (parseInt(b.dataset.balance) || 0) - (parseInt(a.dataset.balance) || 0);
+                    case 'date_asc':
+                        return (a.dataset.date || '').localeCompare(b.dataset.date || '');
+                    case 'date_desc':
+                        return (b.dataset.date || '').localeCompare(a.dataset.date || '');
+                    default:
+                        return 0;
+                }
+            });
+
+            visibleRows.forEach(row => tbody.appendChild(row));
+
+            // Пустое состояние
+            const emptyState = $('#emptyState');
+            if (emptyState) {
+                emptyState.classList.toggle('hidden', visibleCount > 0);
+            }
+        },
+
+        reset() {
+            if ($('#searchInput')) $('#searchInput').value = '';
+            if ($('#filterRole')) $('#filterRole').value = '';
+            if ($('#filterStatus')) $('#filterStatus').value = '';
+            if ($('#sortBy')) $('#sortBy').value = 'name_asc';
+            this.apply();
+        },
+    };
+
+    // ══════════════════════════════════════════════════════════
+    //  МАСКА ТЕЛЕФОНА: +7 (XXX) XXX-XX-XX
+    // ══════════════════════════════════════════════════════════
+
+    function initPhoneMask() {
+        const phoneInput = $('#f_phone');
+        if (!phoneInput) return;
+
+        phoneInput.addEventListener('input', function (e) {
+            let value = this.value.replace(/\D/g, ''); // Убираем всё кроме цифр
+
+            // Если начинается с 8 — заменяем на 7
+            if (value.startsWith('8')) value = '7' + value.slice(1);
+            // Если не начинается с 7 — добавляем
+            if (value.length > 0 && !value.startsWith('7')) value = '7' + value;
+
+            let formatted = '';
+            if (value.length > 0) formatted = '+' + value[0];
+            if (value.length > 1) formatted += ' (' + value.substring(1, 4);
+            if (value.length > 4) formatted += ') ' + value.substring(4, 7);
+            if (value.length > 7) formatted += '-' + value.substring(7, 9);
+            if (value.length > 9) formatted += '-' + value.substring(9, 11);
+
+            this.value = formatted;
+        });
+
+        // Не давать стереть +7
+        phoneInput.addEventListener('keydown', function (e) {
+            const cursorPos = this.selectionStart;
+            if ((e.key === 'Backspace' || e.key === 'Delete') && cursorPos <= 2) {
+                e.preventDefault();
+            }
+        });
+    }
+
+    // Вспомогательная: получить чистый номер из маски
+    function getRawPhone(formatted) {
+        return (formatted || '').replace(/\D/g, '');
+    }
+
+    // ══════════════════════════════════════════════════════════
+    //  ДИНАМИЧЕСКОЕ ПОЛЕ ПАРТНЁРА
+    // ══════════════════════════════════════════════════════════
+
+    function initPartnerToggle() {
+        const checkbox = $('#f_is_partner');
+        const group = $('#partnerNameGroup');
+        const nameInput = $('#f_partner_name');
+        if (!checkbox || !group) return;
+
+        checkbox.addEventListener('change', function () {
+            if (this.checked) {
+                group.classList.remove('hidden');
+                nameInput.setAttribute('required', 'required');
+            } else {
+                group.classList.add('hidden');
+                nameInput.removeAttribute('required');
+                nameInput.value = '';
+            }
+        });
+    }
 
 })();

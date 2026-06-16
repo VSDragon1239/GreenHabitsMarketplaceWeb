@@ -10,7 +10,7 @@ from django.views.generic import TemplateView, ListView
 from .forms import AdminUserForm
 from .models import RegistrationRequest
 from .services import process_registration_approval, process_registration_rejection
-from ..accounts.models import Profile
+from ..accounts.models import Profile, Partner
 from ..accounts.permissions import RoleRequiredMixin
 from ..ecowallet.models import EcoWallet
 from ..ecowallet.services import EcoCoinService
@@ -96,12 +96,13 @@ class ModerateRequestView(LoginRequiredMixin, View):
 
 
 class AdminUserManagementView(RoleRequiredMixin, View):
-    # Укажите требуемую роль, например 'Администраторы'
     required_roles = ['Администраторы']
     template_name = 'administrations/admin_users_management.html'
 
     def get(self, request):
-        users = User.objects.select_related('profile', 'eco_wallet').prefetch_related('groups').all()
+        users = User.objects.select_related('profile', 'eco_wallet') \
+            .prefetch_related('groups', 'managed_partner') \
+            .all()
 
         context = {
             'users': users,
@@ -111,11 +112,6 @@ class AdminUserManagementView(RoleRequiredMixin, View):
             ).select_related() if hasattr(self, '_get_requests') else [],
         }
         return render(request, self.template_name, context)
-
-    # def get_context_data(self, **kwargs):
-    #     context = super().get_context_data(**kwargs)
-    #     context['all_groups'] = Group.objects.all()
-    #     return context
 
     def post(self, request):
         action = request.POST.get('action')
@@ -138,14 +134,17 @@ class AdminUserManagementView(RoleRequiredMixin, View):
                     password = form.cleaned_data.get('password')
                     user.set_password(password if password else User.objects.make_random_password(length=12))
                     user.save()
-
-                    # Сохраняем группы (ManyToMany)
                     form.save_m2m()
 
-                    # Создаем Profile и EcoWallet
-                    Profile.objects.create(user=user, phone=form.cleaned_data['phone'],
-                                           description=form.cleaned_data['description'])
+                    Profile.objects.create(
+                        user=user,
+                        phone=form.cleaned_data['phone'],
+                        description=form.cleaned_data['description']
+                    )
                     EcoWallet.objects.create(user=user, balance=0)
+
+                    # ── Партнёр ──
+                    self._handle_partner(request, user)
 
                 return JsonResponse({'success': True, 'message': f'Пользователь {user.username} создан'})
             except Exception as e:
@@ -154,9 +153,12 @@ class AdminUserManagementView(RoleRequiredMixin, View):
 
     def _update_user(self, request):
         user_id = request.POST.get('user_id')
-        user = User.objects.get(pk=user_id)
-        form = AdminUserForm(request.POST, request.FILES, instance=user)
+        try:
+            user = User.objects.get(pk=user_id)
+        except User.DoesNotExist:
+            return JsonResponse({'error': 'Пользователь не найден'}, status=404)
 
+        form = AdminUserForm(request.POST, request.FILES, instance=user)
         if form.is_valid():
             try:
                 with transaction.atomic():
@@ -167,13 +169,17 @@ class AdminUserManagementView(RoleRequiredMixin, View):
                     user.save()
                     form.save_m2m()
 
-                    # Обновляем профиль
-                    profile = user.profile
+                    # Profile — get_or_create вместо user.profile
+                    # (автосозданный суперпользователь не имеет Profile)
+                    profile, _ = Profile.objects.get_or_create(user=user)
                     profile.phone = form.cleaned_data['phone']
                     profile.description = form.cleaned_data['description']
                     if 'avatar' in request.FILES:
                         profile.avatar = request.FILES['avatar']
                     profile.save()
+
+                    # ── Партнёр ──
+                    self._handle_partner(request, user)
 
                 return JsonResponse({'success': True, 'message': f'Данные {user.username} обновлены'})
             except Exception as e:
@@ -185,19 +191,44 @@ class AdminUserManagementView(RoleRequiredMixin, View):
         try:
             user_to_delete = User.objects.select_related('eco_wallet').get(pk=user_id)
 
-            # Защита от удаления самого себя
             if request.user == user_to_delete:
                 return JsonResponse({'error': 'Вы не можете удалить свой аккаунт'}, status=403)
 
-            # Защита от удаления последнего суперюзера
             if user_to_delete.is_superuser and User.objects.filter(is_superuser=True).count() <= 1:
                 return JsonResponse({'error': 'Нельзя удалить последнего администратора системы'}, status=403)
 
             username = user_to_delete.username
-            user_to_delete.delete()  # Каскадно удалит Profile и EcoWallet (если настроены on_delete=CASCADE)
+            user_to_delete.delete()
             return JsonResponse({'success': True, 'message': f'Пользователь {username} удален'})
         except User.DoesNotExist:
             return JsonResponse({'error': 'Пользователь не найден'}, status=404)
+
+    # ──────────────────────────────────────────────────────────
+    #  Обработка галочки «Партнёр» и названия организации
+    # ──────────────────────────────────────────────────────────
+    def _handle_partner(self, request, user):
+        is_partner = 'is_partner' in request.POST
+        partner_name = request.POST.get('partner_name', '').strip()
+
+        if is_partner and partner_name:
+            # Создаём или обновляем Partner, привязанный к user
+            Partner.objects.update_or_create(
+                user=user,
+                defaults={'name': partner_name}
+            )
+            # Добавляем в группу «Партнёры»
+            partners_group, _ = Group.objects.get_or_create(name='Партнёры')
+            user.groups.add(partners_group)
+
+        elif is_partner and not partner_name:
+            # Галочка стоит, но название пустое — ничего не делаем,
+            # валидация на фронте не пустит, но подстраховка
+            pass
+
+        else:
+            # Галочка снята — отвязываем Partner от пользователя
+            # (сам Partner остаётся в БД, но без управляющего)
+            Partner.objects.filter(user=user).update(user=None)
 
 
 class AdminCheckEcoTasksView(RoleRequiredMixin, ListView):
