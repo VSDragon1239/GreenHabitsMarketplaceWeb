@@ -1,3 +1,5 @@
+import traceback
+
 from django.db import transaction
 from django.db.models import Count
 from django.http import JsonResponse
@@ -373,21 +375,31 @@ class AdminRunAIModerationView(RoleRequiredMixin, View):
     required_roles = ['Администраторы']
 
     def post(self, request, pk):
-        completion = get_object_or_404(UserTaskCompletion, pk=pk)
+        try:
+            completion = get_object_or_404(UserTaskCompletion, pk=pk)
 
-        # Проверяем, что задание ещё не одобрено/отклонено окончательно
-        if completion.status in [UserTaskCompletion.Status.APPROVED, UserTaskCompletion.Status.REJECTED,
-                                 UserTaskCompletion.Status.CANCELLED]:
-            return JsonResponse({'success': False, 'error': 'Задание уже обработано окончательно'}, status=400)
+            if completion.status in [UserTaskCompletion.Status.APPROVED, UserTaskCompletion.Status.REJECTED,
+                                     UserTaskCompletion.Status.CANCELLED]:
+                return JsonResponse({'success': False, 'error': 'Задание уже обработано окончательно'}, status=400)
 
-        # Запускаем ИИ
-        verdict = moderate_task_completion(completion)
+            # Запускаем ИИ
+            verdict = moderate_task_completion(completion)
 
-        # Применяем вердикт к БД
-        apply_ai_verdict(completion, verdict)
+            # Применяем вердикт
+            apply_ai_verdict(completion, verdict)
 
-        return JsonResponse({
-            'success': True,
-            'new_status': completion.get_status_display(),
-            'ai_feedback': completion.ai_feedback
-        })
+            return JsonResponse({
+                'success': True,
+                'new_status': completion.get_status_display(),
+                'ai_feedback': completion.ai_feedback
+            })
+
+        except Exception as e:
+            # Ловим любую ошибку и возвращаем её текст на фронтенд
+            err_trace = traceback.format_exc()
+            logger.error(f"AI Moderation Error: {err_trace}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e),
+                'traceback': err_trace
+            }, status=500)
