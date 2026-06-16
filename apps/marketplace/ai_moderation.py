@@ -7,15 +7,59 @@ from apps.marketplace.models import UserTaskCompletion
 
 logger = logging.getLogger(__name__)
 
+import logging
+import json
+import re
+import base64
+import os
+import requests
+from django.conf import settings
+from apps.marketplace.models import UserTaskCompletion
+
+logger = logging.getLogger(__name__)
+
 
 def moderate_task_completion(completion: UserTaskCompletion) -> dict:
     task = completion.task
     proof_description = ""
+
+    # 1. Готовим текстовое описание
     if completion.proof_text:
         proof_description += f"Текстовое доказательство: {completion.proof_text}\n"
-    if completion.proof_image:
-        proof_description += "К доказательству приложена фотография.\n"
 
+    # 2. Готовим картинку для отправки (если она есть)
+    attachments = []
+    if completion.proof_image:
+        proof_description += "К доказательству приложена фотография (см. вложение).\n"
+
+        try:
+            # Получаем абсолютный путь к файлу на диске
+            image_path = completion.proof_image.path
+            if os.path.exists(image_path):
+                # Читаем файл и кодируем в Base64
+                with open(image_path, 'rb') as img_file:
+                    base64_str = base64.b64encode(img_file.read()).decode('utf-8')
+
+                # Определяем MIME-тип (jpeg, png, webp)
+                ext = os.path.splitext(image_path)[1].lower().replace('.', '')
+                if ext == 'jpg': ext = 'jpeg'
+                mime = f"image/{ext}" if ext in ['jpeg', 'png', 'webp', 'gif'] else "image/jpeg"
+
+                attachments.append({
+                    "name": f"proof_{completion.id}.{ext}",
+                    "mime": mime,
+                    "contentString": base64_str
+                })
+            else:
+                logger.warning(f"Image file not found on disk: {image_path}")
+                proof_description += "ВНИМАНИЕ: Файл фото не найден на сервере!\n"
+        except Exception as e:
+            logger.error(f"Error reading image {completion.proof_image.path}: {e}")
+            proof_description += f"ВНИМАНИЕ: Ошибка чтения файла фото: {e}\n"
+    else:
+        proof_description += "Фотографии нет.\n"
+
+    # 3. Формируем промпт
     prompt = f"""Проверь выполнение эко-задания.
 Задание: {task.title}
 Описание задания: {task.description}
@@ -36,21 +80,30 @@ def moderate_task_completion(completion: UserTaskCompletion) -> dict:
         'Content-Type': 'application/json',
         'Accept': 'application/json',
     }
+
+    # Добавляем attachments в payload, если картинка была обработана
     payload = {
         'message': prompt,
         'mode': 'chat',
         'sessionId': f'task-{completion.id}',
     }
+    if attachments:
+        payload['attachments'] = attachments
 
-    # Логируем для отладки
-    logger.info(f"Sending request to AnythingLLM: URL={url}, Payload={payload}")
+    logger.info(f"Sending request to AnythingLLM: URL={url}, Attachments={len(attachments)}")
 
     try:
-        response = requests.post(url, headers=headers, json=payload, timeout=90)
-        response.raise_for_status()
+        response = requests.post(url, headers=headers, json=payload, timeout=300)
 
-        # Логируем сырой ответ
-        logger.info(f"AnythingLLM raw response: {response.text}")
+        if response.status_code != 200:
+            err_msg = "Неизвестная ошибка"
+            try:
+                err_data = response.json()
+                err_msg = err_data.get('error', str(err_data))
+            except ValueError:
+                err_msg = response.text
+            logger.error(f"AnythingLLM Error Body: {err_msg}")
+            raise Exception(f"Сервер ИИ вернул {response.status_code}: {err_msg}")
 
         data = response.json()
         raw_text = data.get('textResponse', '').strip()
@@ -66,9 +119,7 @@ def moderate_task_completion(completion: UserTaskCompletion) -> dict:
 
     except requests.RequestException as e:
         logger.error(f"AnythingLLM request failed: {e}")
-        # Если AnythingLLM вернул ошибку, пробуем прочитать текст ответа
-        err_text = e.response.text if hasattr(e, 'response') and e.response else ""
-        raise Exception(f"Сетевая ошибка к ИИ: {e}. Ответ сервера: {err_text}")
+        raise Exception(f"Сетевая ошибка к ИИ: {e}")
 
 
 def apply_ai_verdict(completion: UserTaskCompletion, verdict: dict) -> None:
