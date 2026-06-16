@@ -130,3 +130,36 @@ class CompleteEcoTaskView(LoginRequiredMixin, View):
         except Exception as e:
             logger.error(f"Critical error completing task {task_id}: {str(e)}", exc_info=True)
             return JsonResponse({"error": f"Ошибка сервера: {str(e)}"}, status=500)
+
+
+class EcoBonusListView(TemplateView):
+    template_name = "webuiprojectgreenzabgu/pages/eco_bonus_list.html"
+
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context
+
+
+class EditEcoBonusView(TemplateView):
+    template_name = "webuiprojectgreenzabgu/pages/edit_eco_bonus.html"
+
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context
+
+
+class AddEcoBonusView(TemplateView):
+    template_name = "webuiprojectgreenzabgu/pages/add_eco_bonus.html"
+
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context

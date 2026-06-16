@@ -25,7 +25,8 @@ from django.views.generic import RedirectView
 from apps.about.views import IndexView
 from apps.administrations.views import AdminDashBoardView, AdminUserManagementView, AdminAuthRequestsUsersView, \
     ModerateRequestView, AdminCheckEcoTasksView, AdminCheckAiAntiFrodeEcoTasksView
-from apps.marketplace.views import EcoTaskDetailsView, EcoTasksTrackerView, CompleteEcoTaskView
+from apps.marketplace.views import EcoTaskDetailsView, EcoTasksTrackerView, CompleteEcoTaskView, EcoBonusListView, \
+    EditEcoBonusView, AddEcoBonusView
 from apps.system.views import NoAccessView
 from apps.trackers.views import EcoHabitsTrackerView, EcoHabitsCategoriesView, EcoHabitsView, EcoHabitDetailsView, \
     LogEcoHabitView
@@ -77,10 +78,12 @@ urlpatterns = [
     path('marketplace/', IndexView.as_view(), name="marketplace"),
     # path('marketplace/exchange/<int:pk>/', ExchangeOfferView.as_view(), name='marketplace_exchange'),
 
+
     # --- ЗАДАЧИ ---
     path('eco-tasks-tracker/', EcoTasksTrackerView.as_view(), name='eco_tasks_tracker'),
     path('eco-task-details/<int:pk>/', EcoTaskDetailsView.as_view(), name='eco_task_details'),
     path('eco-tasks/complete/<int:task_id>/', CompleteEcoTaskView.as_view(), name='eco_task_complete'),
+
 
     # --- ПРИВЫЧКИ ---
     path('eco-habits-tracker/', EcoHabitsTrackerView.as_view(), name='eco_habits_tracker'),
@@ -88,6 +91,12 @@ urlpatterns = [
     path('categories/<int:pk>/eco-habits/', EcoHabitsView.as_view(), name='eco_habits'),
     path('categories/<int:pk1>/eco-habits/<int:pk2>/details', EcoHabitDetailsView.as_view(), name='eco_habit_details'),
     path('eco-habits/log/<int:pk>/', LogEcoHabitView.as_view(), name='eco_habit_log'),
+
+
+    # --- ПОЛУЧЕННЫЕ БОНУСЫ - --
+    path('eco-bonus-list/', EcoBonusListView.as_view(), name='eco_bonus_list'),
+    path('edit-eco-bonus/<int:pk>/', EditEcoBonusView.as_view(), name='edit_eco_bonus'),
+    path('add-eco-bonus/', AddEcoBonusView.as_view(), name='add_eco_bonus'),
 
     # ============================================================
     #                      Спонсоры
