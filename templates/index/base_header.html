@@ -51,10 +51,13 @@
 
                         <div class="flex-container">
                             <a href="{% url 'admin_check_eco_tasks' %}"
-                               class="nav-link text-gray-600 font-medium text-sm">Управление заданиями</a>
+                               class="nav-link text-gray-600 font-medium text-sm">Администрирование заданиями</a>
 
                             <a href="{% url 'admin_check_ai_frode_eco_tasks' %}"
                                class="nav-link text-gray-600 font-medium text-sm">Проверка GreenAI</a>
+
+                            <a href="{% url 'admin_eco_tasks_manage' %}"
+                               class="nav-link text-gray-600 font-medium text-sm">Редактирование эко-заданий</a>
                         </div>
 
                     {% else %}
@@ -88,18 +91,18 @@
                                 Маркетплейс
                             </a>
                         {% endif %}
-{#                        {% if request.resolver_match.url_name != 'rating_board' %}#}
-{#                            <a href="{% url 'rating_board' %}"#}
-{#                               class="text-gray-700 hover:text-green-600 font-medium text-base">#}
-{#                                Рейтинг#}
-{#                            </a>#}
-{#                        {% endif %}#}
-{#                        {% if request.resolver_match.url_name != 'events' %}#}
-{#                            <a href="{% url 'events' pk=1 %}"#}
-{#                               class="text-gray-700 hover:text-green-600 font-medium text-base">#}
-{#                                События#}
-{#                            </a>#}
-{#                        {% endif %}#}
+                        {#                        {% if request.resolver_match.url_name != 'rating_board' %}#}
+                        {#                            <a href="{% url 'rating_board' %}"#}
+                        {#                               class="text-gray-700 hover:text-green-600 font-medium text-base">#}
+                        {#                                Рейтинг#}
+                        {#                            </a>#}
+                        {#                        {% endif %}#}
+                        {#                        {% if request.resolver_match.url_name != 'events' %}#}
+                        {#                            <a href="{% url 'events' pk=1 %}"#}
+                        {#                               class="text-gray-700 hover:text-green-600 font-medium text-base">#}
+                        {#                                События#}
+                        {#                            </a>#}
+                        {#                        {% endif %}#}
                     {% endif %}
 
                     <div class="relative">
