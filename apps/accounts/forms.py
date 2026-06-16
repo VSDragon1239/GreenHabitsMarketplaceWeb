@@ -5,6 +5,7 @@ from django.contrib.auth.forms import UserChangeForm
 from django.contrib.auth.models import User
 
 from apps.accounts.models import Profile
+from apps.marketplace.models import Offer
 
 ROLE_CHOICES = (
     ("Участники", "Участник"),
