@@ -4,6 +4,8 @@ import uuid
 from django.contrib.auth.models import User
 from django.db import models
 
+from apps.accounts.models import Partner
+
 
 class EcoTaskType(models.Model):
     """Типы проверки заданий"""
@@ -90,6 +92,13 @@ class UserTaskCompletion(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.task.title} [{self.status}]"
+
+
+class OfferCategory(models.TextChoices):
+    FOOD = "Еда"
+    SHOPS = "Магазины"
+    SERVICES = "Услуги"
+    MERCH = "Мерч"
 
 
 class Offer(models.Model):
