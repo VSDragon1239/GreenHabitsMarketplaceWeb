@@ -20,6 +20,8 @@ from ..marketplace.models import UserTaskCompletion, EcoTask
 
 import logging
 
+from ..system.models import Notification
+
 logger = logging.getLogger(__name__)
 
 
@@ -291,6 +293,11 @@ class ReviewTaskActionView(LoginRequiredMixin, View):
         if action == 'approve':
             try:
                 with db_transaction.atomic():
+                    Notification.objects.create(
+                        user=completion.user,
+                        text=f"Задание '{completion.task.title}' одобрено! +{completion.task.reward} ECO",
+                        url="/profile/"
+                    )
                     # Начисляем баллы
                     EcoCoinService.credit(
                         user=completion.user,
@@ -309,6 +316,11 @@ class ReviewTaskActionView(LoginRequiredMixin, View):
                 return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
         elif action == 'reject':
+            Notification.objects.create(
+                user=completion.user,
+                text=f"Задание '{completion.task.title}' отклонено. Комментарий: {comment}",
+                url="/eco-tasks-tracker/"
+            )
             completion.status = UserTaskCompletion.Status.REJECTED
             completion.admin_comment = comment
             completion.save(update_fields=['status', 'admin_comment', 'reviewed_at'])

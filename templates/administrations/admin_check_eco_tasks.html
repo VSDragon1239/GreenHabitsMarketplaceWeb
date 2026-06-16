@@ -77,20 +77,29 @@
                             {% endif %}
                         </td>
                         <td class="px-6 py-4 text-sm">
-                            <div class="flex flex-col gap-2">
-                                <input type="text" id="comment-{{ comp.id }}" placeholder="Комментарий (опционально)"
-                                       class="border rounded px-2 py-1 text-xs w-full">
-                                <div class="flex gap-2">
-                                    <button onclick="reviewTask({{ comp.id }}, 'approve', '{% url 'review_task_action' comp.id %}')"
-                                            class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs transition">
-                                        Одобрить
-                                    </button>
-                                    <button onclick="reviewTask({{ comp.id }}, 'reject', '{% url 'review_task_action' comp.id %}')"
-                                            class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs transition">
-                                        Отклонить
-                                    </button>
+                            {% if comp.status == 'pending' or comp.status == 'ai_approved' or comp.status == 'ai_rejected' %}
+                                <div class="flex flex-col gap-2">
+                                    <input type="text" id="comment-{{ comp.id }}"
+                                           placeholder="Комментарий (опционально)"
+                                           class="border rounded px-2 py-1 text-xs w-full">
+                                    <div class="flex gap-2">
+                                        <button onclick="reviewTask({{ comp.id }}, 'approve', '{% url 'review_task_action' comp.id %}')"
+                                                class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs transition">
+                                            Одобрить
+                                        </button>
+                                        <button onclick="reviewTask({{ comp.id }}, 'reject', '{% url 'review_task_action' comp.id %}')"
+                                                class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs transition">
+                                            Отклонить
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
+                            {% else %}
+                                <div class="text-xs text-gray-500 italic">
+                                    {{ comp.get_status_display }}
+                                    {% if comp.admin_comment %}<br>
+                                        <span class="text-gray-400">Комментарий: {{ comp.admin_comment }}</span>{% endif %}
+                                </div>
+                            {% endif %}
                         </td>
                     </tr>
                 {% empty %}

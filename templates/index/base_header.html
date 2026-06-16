@@ -111,7 +111,9 @@
                                class="btn-bell gradient-green text-white w-10 h-10 rounded-full flex items-center justify-center shadow-md cursor-pointer"
                                aria-label="Уведомления">
                             <i class="material-icons text-lg">notifications</i>
-                            <span class="bell-dot"></span>
+                            {% if unread_notifications_count > 0 %}
+                                <span class="bell-dot">{{ unread_notifications_count }}</span>
+                            {% endif %}
                         </label>
                         <div class="notif-dropdown bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
                             <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
@@ -119,41 +121,26 @@
                                 <span class="text-xs text-green-600 font-semibold cursor-pointer hover:underline">Прочитать все</span>
                             </div>
                             <div class="max-h-64 overflow-y-auto">
-                                <div class="notif-item unread px-4 py-3 cursor-pointer">
-                                    <div class="flex items-start gap-3">
-                                        <div class="w-8 h-8 rounded-full badge-pending flex items-center justify-center flex-shrink-0">
-                                            <i class="material-icons text-sm">person_add</i>
+                                {% for notif in unread_notifications %}
+                                    <a href="{{ notif.url }}"
+                                       class="notif-item unread px-4 py-3 cursor-pointer block hover:bg-gray-50">
+                                        <div class="flex items-start gap-3">
+                                            <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                                                <i class="material-icons text-sm text-green-600">eco</i>
+                                            </div>
+                                            <div>
+                                                <p class="text-sm text-gray-800 font-medium">{{ notif.text }}</p>
+                                                <p class="text-xs text-gray-400 mt-0.5">{{ notif.created_at|timesince }}
+                                                    назад</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p class="text-sm text-gray-800 font-medium">Новый запрос на регистрацию</p>
-                                            <p class="text-xs text-gray-400 mt-0.5">Иванов А.С. — ФКНТ</p>
-                                            <p class="text-xs text-gray-400">2 мин назад</p>
-                                        </div>
+                                    </a>
+                                {% empty %}
+                                    <div class="notif-item px-4 py-6 text-center text-gray-400 text-sm">
+                                        <i class="material-icons text-3xl mb-2">notifications_off</i>
+                                        <p>Нет новых уведомлений</p>
                                     </div>
-                                </div>
-                                <div class="notif-item unread px-4 py-3 cursor-pointer">
-                                    <div class="flex items-start gap-3">
-                                        <div class="w-8 h-8 rounded-full badge-verified flex items-center justify-center flex-shrink-0">
-                                            <i class="material-icons text-sm">check_circle</i>
-                                        </div>
-                                        <div>
-                                            <p class="text-sm text-gray-800 font-medium">Данные отправлены студенту</p>
-                                            <p class="text-xs text-gray-400 mt-0.5">Петрова М.И. — email отправлен</p>
-                                            <p class="text-xs text-gray-400">15 мин назад</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="notif-item px-4 py-3 cursor-pointer">
-                                    <div class="flex items-start gap-3">
-                                        <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
-                                            <i class="material-icons text-sm text-gray-400">info</i>
-                                        </div>
-                                        <div>
-                                            <p class="text-sm text-gray-500">5 запросов ожидают проверки</p>
-                                            <p class="text-xs text-gray-400 mt-0.5">1 час назад</p>
-                                        </div>
-                                    </div>
-                                </div>
+                                {% endfor %}
                             </div>
                         </div>
                     </div>

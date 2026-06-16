@@ -95,6 +95,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'apps.system.context_processors.user_notifications',
                 # 'WebUIProjectGreenZabGU.context_processors.eco_balance',
                 # Теперь в любом HTML шаблоне вы можете писать: {{ user_eco_balance }} ECO.
             ],
