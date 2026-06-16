@@ -29,7 +29,7 @@ from apps.accounts.views import ProfileView, EditProfileView, PartnerDashboardVi
 from apps.administrations.views import AdminDashBoardView, AdminUserManagementView, AdminAuthRequestsUsersView, \
     ModerateRequestView, AdminCheckEcoTasksView, AdminCheckAiAntiFrodeEcoTasksView, AdminEcoTasksManageView, \
     AdminEcoTaskCreateView, AdminEcoTaskUpdateView, AdminEcoTaskDeleteView, ReviewTaskActionView, \
-    AdminRunAIModerationView
+    AdminRunAIModerationView, AdminReportsView, AdminExportCSVView
 from apps.marketplace.views import EcoTaskDetailsView, EcoTasksTrackerView, CompleteEcoTaskView, EcoBonusListView, \
     EditEcoBonusView, AddEcoBonusView, MarketplaceView, ExchangeOfferView
 from apps.system.views import NoAccessView
@@ -81,6 +81,10 @@ urlpatterns = [
     path('admin/eco-tasks/create/', AdminEcoTaskCreateView.as_view(), name='admin_eco_task_create'),
     path('admin/eco-tasks/<int:pk>/edit/', AdminEcoTaskUpdateView.as_view(), name='admin_eco_task_edit'),
     path('admin/eco-tasks/<int:pk>/delete/', AdminEcoTaskDeleteView.as_view(), name='admin_eco_task_delete'),
+
+    # Внутри urlpatterns добавь:
+    path('admin/reports/', AdminReportsView.as_view(), name='admin_reports'),
+    path('admin/export/<str:model_name>/', AdminExportCSVView.as_view(), name='admin_export_csv'),
 
     # ============================================================
     #                      Пользователи

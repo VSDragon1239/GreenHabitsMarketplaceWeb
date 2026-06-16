@@ -1,0 +1,171 @@
+{% extends 'index/base_header.html' %}
+{% load static %}
+
+{% block title %}Администрирование - Отчёты{% endblock %}
+
+{% block extra_css %}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        .stat-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+{% endblock %}
+
+{% block content_block_0 %}
+    <h1>МЗП -> Панель администратора -> Отчёты и аналитика</h1>
+{% endblock %}
+
+{% block content_block_1 %}
+    <div class="px-12 py-8 bg-gray-50 min-h-screen">
+
+        <!-- Кнопки экспорта -->
+        <div class="bg-white rounded-xl shadow-md p-4 mb-6 flex flex-wrap gap-3 items-center justify-between">
+            <h2 class="text-xl font-bold text-gray-800 flex items-center">
+                <i class="material-icons mr-2 text-blue-500">analytics</i> Экспорт данных (CSV)
+            </h2>
+            <div class="flex gap-2">
+                <a href="{% url 'admin_export_csv' 'users' %}"
+                   class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1">
+                    <i class="material-icons text-sm">download</i> Пользователи
+                </a>
+                <a href="{% url 'admin_export_csv' 'tasks' %}"
+                   class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1">
+                    <i class="material-icons text-sm">download</i> Выполнения заданий
+                </a>
+                <a href="{% url 'admin_export_csv' 'promocodes' %}"
+                   class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1">
+                    <i class="material-icons text-sm">download</i> Промокоды
+                </a>
+            </div>
+        </div>
+
+        <!-- Сетка статистики -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+
+            <!-- Пользователи -->
+            <div class="stat-card bg-white rounded-xl shadow-md p-5 border-l-4 border-blue-500">
+                <div class="flex justify-between items-start mb-2">
+                    <div class="bg-blue-100 rounded-full p-2"><i class="material-icons text-blue-500">group</i></div>
+                    <span class="text-3xl font-bold text-gray-800">{{ total_users }}</span>
+                </div>
+                <h3 class="text-gray-500 text-sm font-semibold uppercase">Всего пользователей</h3>
+            </div>
+
+            <!-- Партнеры -->
+            <div class="stat-card bg-white rounded-xl shadow-md p-5 border-l-4 border-indigo-500">
+                <div class="flex justify-between items-start mb-2">
+                    <div class="bg-indigo-100 rounded-full p-2"><i class="material-icons text-indigo-500">store</i>
+                    </div>
+                    <span class="text-3xl font-bold text-gray-800">{{ total_partners }}</span>
+                </div>
+                <h3 class="text-gray-500 text-sm font-semibold uppercase">Партнеров</h3>
+            </div>
+
+            <!-- Заявки -->
+            <div class="stat-card bg-white rounded-xl shadow-md p-5 border-l-4 border-yellow-500">
+                <div class="flex justify-between items-start mb-2">
+                    <div class="bg-yellow-100 rounded-full p-2"><i class="material-icons text-yellow-500">pending_actions</i>
+                    </div>
+                    <span class="text-3xl font-bold text-gray-800">{{ pending_requests }}</span>
+                </div>
+                <h3 class="text-gray-500 text-sm font-semibold uppercase">Заявок на рассмотрении</h3>
+            </div>
+
+            <!-- Эко-коины -->
+            <div class="stat-card bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow-md p-5 text-white">
+                <div class="flex justify-between items-start mb-2">
+                    <div class="bg-white bg-opacity-20 rounded-full p-2"><i class="material-icons">eco</i></div>
+                    <span class="text-3xl font-bold">{{ total_eco_coins }}</span>
+                </div>
+                <h3 class="text-green-100 text-sm font-semibold uppercase">Монет в обращении</h3>
+            </div>
+        </div>
+
+        <!-- Блок Задания -->
+        <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center"><i
+                    class="material-icons mr-2 text-green-500">task_alt</i> Статистика заданий</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <div class="text-2xl font-bold text-gray-800">{{ active_tasks }} / {{ total_tasks }}</div>
+                    <div class="text-gray-500 text-xs mt-1">Активных / Всего</div>
+                </div>
+                <div class="bg-yellow-50 p-4 rounded-lg">
+                    <div class="text-2xl font-bold text-yellow-600">{{ tasks_pending }}</div>
+                    <div class="text-gray-500 text-xs mt-1">На проверке</div>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg">
+                    <div class="text-2xl font-bold text-green-600">{{ tasks_approved }}</div>
+                    <div class="text-gray-500 text-xs mt-1">Одобрено</div>
+                </div>
+                <div class="bg-red-50 p-4 rounded-lg">
+                    <div class="text-2xl font-bold text-red-600">{{ tasks_rejected }}</div>
+                    <div class="text-gray-500 text-xs mt-1">Отклонено</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Блок Маркетплейс -->
+        <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center"><i
+                    class="material-icons mr-2 text-purple-500">shopping_bag</i> Статистика маркетплейса</h3>
+            <div class="grid grid-cols-3 gap-4 text-center">
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <div class="text-2xl font-bold text-gray-800">{{ total_offers }}</div>
+                    <div class="text-gray-500 text-xs mt-1">Всего офферов</div>
+                </div>
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <div class="text-2xl font-bold text-blue-600">{{ promos_issued }}</div>
+                    <div class="text-gray-500 text-xs mt-1">Выдано промокодов</div>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg">
+                    <div class="text-2xl font-bold text-green-600">{{ promos_used }}</div>
+                    <div class="text-gray-500 text-xs mt-1">Использовано</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Топы -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Топ пользователей -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center"><i
+                        class="material-icons mr-2 text-yellow-500">leaderboard</i> Топ-5 студентов (по балансу)</h3>
+                <div class="space-y-3">
+                    {% for wallet in top_users %}
+                        <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                            <span class="font-semibold text-gray-700">{{ forloop.counter }}. {{ wallet.user.first_name|default:wallet.user.username }}</span>
+                            <span class="font-bold text-green-600">{{ wallet.balance }} ECO</span>
+                        </div>
+                    {% empty %}
+                        <p class="text-gray-400 text-sm">Нет данных</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Топ офферов -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center"><i
+                        class="material-icons mr-2 text-purple-500">trending_up</i> Топ-5 офферов (по покупкам)</h3>
+                <div class="space-y-3">
+                    {% for offer in top_offers %}
+                        <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                            <span class="font-semibold text-gray-700 text-sm truncate flex-1 mr-2">{{ offer.title }}</span>
+                            <span class="font-bold text-purple-600 text-sm whitespace-nowrap">{{ offer.promo_count }} покупок</span>
+                        </div>
+                    {% empty %}
+                        <p class="text-gray-400 text-sm">Нет данных</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+{% endblock %}

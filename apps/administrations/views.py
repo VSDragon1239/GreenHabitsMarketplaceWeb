@@ -1,8 +1,9 @@
+import csv
 import traceback
 
 from django.db import transaction
-from django.db.models import Count
-from django.http import JsonResponse
+from django.db.models import Count, Sum
+from django.http import JsonResponse, HttpResponse
 from django.urls import reverse_lazy
 from django.views import View
 from django.shortcuts import render, get_object_or_404
@@ -16,9 +17,9 @@ from .models import RegistrationRequest
 from .services import process_registration_approval, process_registration_rejection
 from ..accounts.models import Profile, Partner
 from ..accounts.permissions import RoleRequiredMixin
-from ..ecowallet.models import EcoWallet, EcoTransactionType
+from ..ecowallet.models import EcoWallet, EcoTransactionType, EcoCoinTransaction
 from ..ecowallet.services import EcoCoinService
-from ..marketplace.models import UserTaskCompletion, EcoTask
+from ..marketplace.models import UserTaskCompletion, EcoTask, Offer, UserPromoCode
 
 import logging
 
@@ -369,6 +370,7 @@ class AdminEcoTaskDeleteView(RoleRequiredMixin, View):
 
 from apps.marketplace.ai_moderation import moderate_task_completion, apply_ai_verdict
 
+
 class AdminRunAIModerationView(RoleRequiredMixin, View):
     """AJAX View для запуска ИИ-проверки одного задания"""
     required_roles = ['Администраторы']
@@ -402,3 +404,76 @@ class AdminRunAIModerationView(RoleRequiredMixin, View):
                 'error': str(e),
                 'traceback': err_trace
             }, status=500)
+
+
+class AdminReportsView(RoleRequiredMixin, TemplateView):
+    """Красивая страница со статистикой и отчётами"""
+    template_name = "administrations/admin_reports.html"
+    required_roles = ['Администраторы']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # 1. Пользователи и заявки
+        context['total_users'] = User.objects.count()
+        context['total_partners'] = Partner.objects.count()
+        context['pending_requests'] = RegistrationRequest.objects.filter(status='new').count()
+
+        # 2. Экономика (ECO)
+        context['total_eco_coins'] = EcoWallet.objects.aggregate(Sum('balance'))['balance__sum'] or 0
+        context['total_transactions'] = EcoCoinTransaction.objects.count()
+
+        # 3. Эко-Задания
+        context['total_tasks'] = EcoTask.objects.count()
+        context['active_tasks'] = EcoTask.objects.filter(is_active=True).count()
+        context['tasks_pending'] = UserTaskCompletion.objects.filter(status='pending').count()
+        context['tasks_approved'] = UserTaskCompletion.objects.filter(status='approved').count()
+        context['tasks_rejected'] = UserTaskCompletion.objects.filter(status='rejected').count()
+
+        # 4. Маркетплейс
+        context['total_offers'] = Offer.objects.count()
+        context['promos_issued'] = UserPromoCode.objects.count()
+        context['promos_used'] = UserPromoCode.objects.filter(is_used=True).count()
+
+        # 5. Топ-5 самых богатых пользователей
+        context['top_users'] = EcoWallet.objects.select_related('user').order_by('-balance')[:5]
+
+        # 6. Топ-5 популярных офферов
+        context['top_offers'] = Offer.objects.annotate(
+            promo_count=Count('issued_codes')
+        ).order_by('-promo_count')[:5]
+
+        return context
+
+
+class AdminExportCSVView(RoleRequiredMixin, View):
+    """Выгрузка данных в CSV (Excel)"""
+    required_roles = ['Администраторы']
+
+    def get(self, request, model_name):
+        response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
+
+        if model_name == 'users':
+            response['Content-Disposition'] = 'attachment; filename="users_export.csv"'
+            writer = csv.writer(response)
+            writer.writerow(['ID', 'Логин', 'Email', 'Имя', 'Фамилия', 'Баланс ECO', 'Группы'])
+            for user in User.objects.prefetch_related('groups', 'eco_wallet').all():
+                balance = user.eco_wallet.balance if hasattr(user, 'eco_wallet') else 0
+                groups = ", ".join([g.name for g in user.groups.all()])
+                writer.writerow([user.id, user.username, user.email, user.first_name, user.last_name, balance, groups])
+
+        elif model_name == 'tasks':
+            response['Content-Disposition'] = 'attachment; filename="tasks_completions.csv"'
+            writer = csv.writer(response)
+            writer.writerow(
+                ['ID', 'Пользователь', 'Email', 'Задание', 'Награда', 'Статус', 'Дата выполнения', 'Комментарий ИИ'])
+            for comp in UserTaskCompletion.objects.select_related('user', 'task').all():
+                writer.writerow([
+                    comp.id, comp.user.username, comp.user.email, comp.task.title, comp.task.reward,
+                    comp.get_status_display(), comp.created_at.strftime("%Y-%m-%d %H:%M"), comp.ai_feedback or ""
+                ])
+
+        elif model_name == 'promocodes':
+            response['Content-Disposition'] = 'attachment; filename="promocodes_export.csv"'
+            writer = csv.writer(response)
+            writer.writerow(['ID', 'Пользователь', 'Промокод', 'Партнер', 'Оффер', 'Использован', 'Дата создания'])
