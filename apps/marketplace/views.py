@@ -9,7 +9,7 @@ from django.shortcuts import get_object_or_404
 
 from django.views import View
 
-from apps.ecowallet.models import EcoTransactionType
+from apps.ecowallet.models import EcoTransactionType, EcoWallet
 from apps.ecowallet.services import EcoCoinService
 from apps.marketplace.models import EcoTask, UserTaskCompletion, Offer, UserPromoCode
 
@@ -170,12 +170,23 @@ class MarketplaceView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        user = self.request.user
+
+        # Получаем баланс ( safely )
+        try:
+            context['user_eco_balance'] = user.eco_wallet.balance
+        except EcoWallet.DoesNotExist:
+            context['user_eco_balance'] = 0
+
         # Получаем все активные предложения
         context['offers'] = Offer.objects.filter(is_active=True).select_related('partner')
-        # Получаем промокоды текущего пользователя
-        context['user_promocodes'] = UserPromoCode.objects.filter(
-            user=self.request.user
+
+        # Получаем АКТИВНЫЕ промокоды текущего пользователя (не использованные)
+        context['my_promocodes'] = UserPromoCode.objects.filter(
+            user=user,
+            is_used=False
         ).select_related('offer', 'offer__partner').order_by('-created_at')
+
         return context
 
 
@@ -186,7 +197,7 @@ class ExchangeOfferView(LoginRequiredMixin, View):
         offer = get_object_or_404(Offer, pk=pk, is_active=True)
         user = request.user
 
-        # 1. Пытаемся списать баллы (EcoCoinService.debit кинет ошибку, если баллов не хватает)
+        # 1. Пытаемся списать баллы
         try:
             EcoCoinService.debit(
                 user=user,
@@ -207,9 +218,10 @@ class ExchangeOfferView(LoginRequiredMixin, View):
             code=promo_code
         )
 
-        # 4. Возвращаем успех и новый баланс
+        # 4. Возвращаем успех, новый баланс и имя партнера для модалки
         return JsonResponse({
             "success": True,
             "promo_code": promo_code,
+            "partner_name": offer.partner.name,
             "new_balance": str(EcoCoinService.get_balance(user))
         })

@@ -1,75 +1,187 @@
 {% extends 'index/base_header.html' %}
 {% load static %}
 
-{% block title %}Маркетплейс бонусов{% endblock %}
+{% block title %}МЗП - Маркетплейс бонусов{% endblock %}
 
 {% block extra_css %}
-    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .category-btn.active {
+            background-color: #2E7D32;
+            color: white;
+        }
+    </style>
+{% endblock %}
+
+{% block content_block_0 %}
 {% endblock %}
 
 {% block content_block_1 %}
-    <div class="container mx-auto px-4 py-8">
-        <h1 class="text-3xl font-bold text-gray-800 mb-6">Маркетплейс бонусов</h1>
+    <div class="px-12 py-8 bg-gray-50 min-h-screen">
 
-        <!-- Сетка офферов -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            {% for offer in offers %}
-                <div class="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 flex flex-col">
-                    <div class="p-6 flex-grow">
-                        <div class="flex items-center mb-3">
-                            <span class="bg-green-100 text-green-700 text-xs font-semibold px-2.5 py-1 rounded-full">{{ offer.get_category_display }}</span>
+        <!-- Balance Card -->
+        <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-2xl shadow-lg p-6 mb-6 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-green-100 text-sm mb-1">Ваш баланс</p>
+                    <div class="text-5xl font-bold">{{ user_eco_balance }}</div>
+                    <p class="text-green-100 text-sm mt-1">ECO баллов</p>
+                </div>
+                <div class="bg-white bg-opacity-20 rounded-xl p-4">
+                    <i class="material-icons text-5xl">account_balance_wallet</i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Filters -->
+        <div class="bg-white rounded-xl shadow-md p-3 mb-6 flex items-center gap-2 overflow-x-auto">
+            <button class="category-btn active flex-1 px-4 py-2 rounded-lg font-semibold text-sm transition whitespace-nowrap"
+                    data-category="all" onclick="filterCategory(this)">Все
+            </button>
+            <button class="category-btn flex-1 text-gray-700 px-4 py-2 rounded-lg font-semibold text-sm hover:bg-green-50 transition whitespace-nowrap"
+                    data-category="Еда" onclick="filterCategory(this)">Еда
+            </button>
+            <button class="category-btn flex-1 text-gray-700 px-4 py-2 rounded-lg font-semibold text-sm hover:bg-green-50 transition whitespace-nowrap"
+                    data-category="Магазины" onclick="filterCategory(this)">Магазины
+            </button>
+            <button class="category-btn flex-1 text-gray-700 px-4 py-2 rounded-lg font-semibold text-sm hover:bg-green-50 transition whitespace-nowrap"
+                    data-category="Услуги" onclick="filterCategory(this)">Услуги
+            </button>
+        </div>
+
+        <!-- Partner Cards Grid -->
+        <div class="mb-8">
+            <div class="flex items-center mb-4">
+                <i class="material-icons text-2xl eco-green mr-2">store</i>
+                <h3 class="text-2xl font-bold text-gray-800">Доступные бонусы</h3>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="offers-grid">
+                {% for offer in offers %}
+                    <div class="offer-card bg-white rounded-xl shadow-md p-5 border-t-4 border-green-500 hover:shadow-xl transition flex flex-col"
+                         data-category="{{ offer.category }}">
+                        <div class="bg-green-50 rounded-full w-16 h-16 flex items-center justify-center mb-3 mx-auto">
+                            <i class="material-icons text-3xl eco-green">{{ offer.partner.icon }}</i>
                         </div>
-                        <h3 class="text-xl font-bold text-gray-800 mb-2">{{ offer.title }}</h3>
-                        <p class="text-gray-500 text-sm mb-4">{{ offer.description|truncatewords:20 }}</p>
-                    </div>
-                    <div class="px-6 py-4 bg-gray-50 border-t flex items-center justify-between">
-                        <div class="text-2xl font-bold eco-green flex items-center">
-                            {{ offer.price_in_eco }}
-                            <span class="text-sm font-medium text-gray-500 ml-1">ECO</span>
+                        <h4 class="text-lg font-bold text-gray-800 text-center mb-1">{{ offer.partner.name }}</h4>
+                        <p class="text-gray-600 text-sm text-center mb-3 h-10 overflow-hidden">{{ offer.title }}</p>
+                        <div class="bg-green-50 rounded-lg p-3 mb-3 mt-auto">
+                            <div class="text-center">
+                                <div class="text-3xl font-bold eco-green">{{ offer.price_in_eco }}</div>
+                                <div class="text-gray-600 text-xs">баллов</div>
+                            </div>
                         </div>
-                        <button onclick="buyOffer({{ offer.id }}, {{ offer.price_in_eco }})"
-                                class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold text-sm transition">
+                        <button onclick="exchangeOffer({{ offer.id }}, this)"
+                                class="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-md transition exchange-btn">
                             Обменять
                         </button>
                     </div>
-                </div>
-            {% empty %}
-                <div class="col-span-3 text-center text-gray-400 py-12">
-                    Партнёры пока не добавили предложений.
-                </div>
-            {% endfor %}
+                {% empty %}
+                    <div class="col-span-full text-center py-10 text-gray-400">
+                        <i class="material-icons text-5xl mb-2">storefront</i>
+                        <p>Пока нет доступных предложений.</p>
+                    </div>
+                {% endfor %}
+            </div>
         </div>
 
-        <!-- Мои промокоды -->
-        <h2 class="text-2xl font-bold text-gray-800 mb-4">Мои промокоды</h2>
-        <div class="bg-white rounded-xl shadow-md p-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {% for promo in user_promocodes %}
-                    <div class="border-l-4 {% if promo.is_used %}border-gray-300 opacity-60{% else %}border-green-500{% endif %} bg-gray-50 p-4 rounded-r-lg flex justify-between items-center">
-                        <div>
-                            <div class="text-xs text-gray-500">{{ promo.offer.partner.name }}
-                                — {{ promo.offer.title }}</div>
-                            <div class="text-xl font-mono font-bold text-gray-800 tracking-wider">{{ promo.code }}</div>
+        <!-- My Promocodes Section -->
+        <div>
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-2xl font-bold text-gray-800">Мои промокоды</h3>
+                <span class="text-gray-600 text-sm">{{ my_promocodes|length }} активных</span>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-4" id="promo-list">
+                {% for promo in my_promocodes %}
+                    <div class="flex items-center justify-between border-b border-gray-100 pb-3 mb-3 last:border-b-0 last:mb-0 last:pb-0">
+                        <div class="flex items-center">
+                            <i class="material-icons text-2xl eco-green mr-3">confirmation_number</i>
+                            <div>
+                                <div class="text-gray-800 font-semibold">{{ promo.offer.title }}</div>
+                                <div class="text-gray-500 text-sm">От: {{ promo.offer.partner.name }}</div>
+                            </div>
                         </div>
-                        {% if promo.is_used %}
-                            <span class="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">Использован</span>
-                        {% else %}
-                            <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Активен</span>
-                        {% endif %}
+                        <div class="bg-green-50 px-3 py-1 rounded text-xs font-bold eco-green tracking-wider">{{ promo.code }}</div>
                     </div>
                 {% empty %}
-                    <p class="text-gray-400 col-span-2 text-center py-4">У вас пока нет промокодов.</p>
+                    <p class="text-gray-400 text-center py-4 text-sm">У вас пока нет промокодов. Обменяйте баллы
+                        выше!</p>
                 {% endfor %}
             </div>
         </div>
     </div>
 
-    <script>
-        async function buyOffer(id, price) {
-            if (!confirm(`Вы уверены, что хотите обменять ${price} ECO на этот бонус?`)) return;
+    <!-- Скрытая Модалка для показа промокода -->
+    <div id="successModal" class="fixed inset-0 bg-black/50 z-50 items-center justify-center" style="display: none;">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full mx-4 overflow-hidden">
+            <div class="p-6 text-center">
+                <div class="bg-green-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
+                    <i class="material-icons text-4xl eco-green">check_circle</i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Успешно!</h3>
+                <p class="text-gray-600 text-sm mb-4" id="modal-partner-name"></p>
 
-            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                <div class="bg-gray-100 p-4 rounded-lg mb-4">
+                    <p class="text-gray-500 text-xs mb-1">Покажите этот код на кассе:</p>
+                    <div class="text-2xl font-bold eco-green tracking-[0.2em] font-mono" id="modal-promo-code"></div>
+                </div>
+
+                <button onclick="closeModal()"
+                        class="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg font-semibold transition">
+                    Понятно
+                </button>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        // Функция фильтрации по категориям
+        function filterCategory(btn) {
+            // Снимаем активность со всех
+            document.querySelectorAll('.category-btn').forEach(b => {
+                b.classList.remove('active', 'bg-green-600', 'text-white');
+                b.classList.add('text-gray-700');
+            });
+            // Делаем активной текущую
+            btn.classList.add('active', 'bg-green-600', 'text-white');
+            btn.classList.remove('text-gray-700');
+
+            const category = btn.dataset.category;
+            document.querySelectorAll('.offer-card').forEach(card => {
+                if (category === 'all' || card.dataset.category === category) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        // Функция покупки (AJAX)
+        async function exchangeOffer(id, btnElement) {
+            if (!confirm('Вы уверены, что хотите обменять баллы?')) return;
+
+            // Получаем CSRF токен из куки
+            const getCookie = (name) => {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    document.cookie.split(';').forEach(c => {
+                        c = c.trim();
+                        if (c.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(c.substring(name.length + 1));
+                        }
+                    });
+                }
+                return cookieValue;
+            };
+            const csrfToken = getCookie('csrftoken');
+
+            // Визуальная блокировка кнопки
+            btnElement.disabled = true;
+            btnElement.innerText = 'Обработка...';
 
             try {
                 const response = await fetch(`/marketplace/exchange/${id}/`, {
@@ -83,14 +195,30 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    alert(`Успех! Ваш промокод: ${data.promo_code}`);
-                    location.reload(); // Перезагружаем, чтобы показать новый код
+                    // Показываем модалку
+                    document.getElementById('modal-partner-name').innerText = data.partner_name;
+                    document.getElementById('modal-promo-code').innerText = data.promo_code;
+                    const modal = document.getElementById('successModal');
+                    modal.style.display = 'flex';
+
+                    // Обновляем баланс на странице
+                    // (Просто перезагружаем страницу через 4 секунды для простоты)
+                    setTimeout(() => location.reload(), 4000);
                 } else {
                     alert('Ошибка: ' + (data.error || 'Недостаточно баллов'));
+                    btnElement.disabled = false;
+                    btnElement.innerText = 'Обменять';
                 }
             } catch (e) {
                 alert('Сетевая ошибка: ' + e.message);
+                btnElement.disabled = false;
+                btnElement.innerText = 'Обменять';
             }
+        }
+
+        function closeModal() {
+            document.getElementById('successModal').style.display = 'none';
+            location.reload(); // Перезагружаем, чтобы обновить список промокодов
         }
     </script>
 {% endblock %}
