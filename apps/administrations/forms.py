@@ -1,5 +1,8 @@
 from django import forms
 from django.contrib.auth.models import User, Group
+from apps.marketplace.models import EcoTask
+
+
 
 
 class AdminUserForm(forms.ModelForm):
@@ -39,3 +42,23 @@ class AdminUserForm(forms.ModelForm):
             # Заполняем поля профиля при редактировании
             self.fields['phone'].initial = self.instance.profile.phone
             self.fields['description'].initial = self.instance.profile.description
+
+
+class EcoTaskForm(forms.ModelForm):
+    class Meta:
+        model = EcoTask
+        fields = ['title', 'description', 'reward', 'task_type', 'secret_code', 'is_active']
+        widgets = {
+            'title': forms.TextInput(
+                attrs={'class': 'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none'}),
+            'description': forms.Textarea(attrs={'rows': 4,
+                                                 'class': 'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none'}),
+            'reward': forms.NumberInput(
+                attrs={'class': 'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none'}),
+            'task_type': forms.Select(
+                attrs={'class': 'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none'}),
+            'secret_code': forms.TextInput(
+                attrs={'class': 'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none',
+                       'placeholder': 'Оставьте пустым, если не требуется'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'w-5 h-5 text-green-600 rounded'}),
+        }

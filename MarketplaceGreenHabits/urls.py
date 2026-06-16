@@ -24,7 +24,8 @@ from django.views.generic import RedirectView
 
 from apps.about.views import IndexView
 from apps.administrations.views import AdminDashBoardView, AdminUserManagementView, AdminAuthRequestsUsersView, \
-    ModerateRequestView, AdminCheckEcoTasksView, AdminCheckAiAntiFrodeEcoTasksView
+    ModerateRequestView, AdminCheckEcoTasksView, AdminCheckAiAntiFrodeEcoTasksView, AdminEcoTasksManageView, \
+    AdminEcoTaskCreateView, AdminEcoTaskUpdateView, AdminEcoTaskDeleteView
 from apps.marketplace.views import EcoTaskDetailsView, EcoTasksTrackerView, CompleteEcoTaskView, EcoBonusListView, \
     EditEcoBonusView, AddEcoBonusView
 from apps.system.views import NoAccessView
@@ -64,6 +65,12 @@ urlpatterns = [
     path('api/moderate-request/<int:pk>/', ModerateRequestView.as_view(), name='api_moderate_request'),     # Управляет кнопками для заявок на регистрацию
     path('admin/check/eco-tasks/', AdminCheckEcoTasksView.as_view(), name='admin_check_eco_tasks'),
     path('admin/check/eco-tasks-ai/', AdminCheckAiAntiFrodeEcoTasksView.as_view(), name='admin_check_ai_frode_eco_tasks'),
+
+    path('admin/eco-tasks/', AdminEcoTasksManageView.as_view(), name='admin_eco_tasks_manage'),
+    path('admin/eco-tasks/create/', AdminEcoTaskCreateView.as_view(), name='admin_eco_task_create'),
+    path('admin/eco-tasks/<int:pk>/edit/', AdminEcoTaskUpdateView.as_view(), name='admin_eco_task_edit'),
+    path('admin/eco-tasks/<int:pk>/delete/', AdminEcoTaskDeleteView.as_view(), name='admin_eco_task_delete'),
+]
 
     # ============================================================
     #                      Пользователи

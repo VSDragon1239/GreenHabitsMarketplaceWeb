@@ -3,18 +3,19 @@ from django.contrib.auth.models import User, Group
 from django.db import transaction
 from django.db.models import Count
 from django.http import JsonResponse
+from django.urls import reverse_lazy
 from django.views import View
 from django.shortcuts import render, get_object_or_404
-from django.views.generic import TemplateView, ListView
+from django.views.generic import TemplateView, ListView, UpdateView, CreateView
 
-from .forms import AdminUserForm
+from .forms import AdminUserForm, EcoTaskForm
 from .models import RegistrationRequest
 from .services import process_registration_approval, process_registration_rejection
 from ..accounts.models import Profile, Partner
 from ..accounts.permissions import RoleRequiredMixin
 from ..ecowallet.models import EcoWallet
 from ..ecowallet.services import EcoCoinService
-from ..marketplace.models import UserTaskCompletion
+from ..marketplace.models import UserTaskCompletion, EcoTask
 
 
 class AdminDashBoardView(TemplateView):
@@ -303,3 +304,39 @@ class ReviewTaskActionView(RoleRequiredMixin, View):
             return JsonResponse({'success': True, 'message': 'Отклонено'})
 
         return JsonResponse({'success': False, 'error': 'Неизвестное действие'}, status=400)
+
+
+class AdminEcoTasksManageView(RoleRequiredMixin, ListView):
+    """Список всех заданий для редактирования"""
+    template_name = "administrations/admin_eco_tasks_manage.html"
+    required_roles = ['Администраторы']
+    model = EcoTask
+    context_object_name = 'tasks'
+
+
+class AdminEcoTaskCreateView(RoleRequiredMixin, CreateView):
+    """Создание нового задания"""
+    template_name = "administrations/admin_eco_task_form.html"
+    required_roles = ['Администраторы']
+    model = EcoTask
+    form_class = EcoTaskForm
+    success_url = reverse_lazy('admin_eco_tasks_manage')
+
+
+class AdminEcoTaskUpdateView(RoleRequiredMixin, UpdateView):
+    """Редактирование существующего задания"""
+    template_name = "administrations/admin_eco_task_form.html"
+    required_roles = ['Администраторы']
+    model = EcoTask
+    form_class = EcoTaskForm
+    success_url = reverse_lazy('admin_eco_tasks_manage')
+
+
+class AdminEcoTaskDeleteView(RoleRequiredMixin, View):
+    """AJAX удаление задания"""
+    required_roles = ['Администраторы']
+
+    def post(self, request, pk):
+        task = get_object_or_404(EcoTask, pk=pk)
+        task.delete()
+        return JsonResponse({"success": True, "message": "Задание удалено"})

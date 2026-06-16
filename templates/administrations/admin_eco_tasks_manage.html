@@ -1,0 +1,97 @@
+{% extends 'index/base_header.html' %}
+{% load static %}
+
+{% block title %}Управление эко-заданиями{% endblock %}
+
+{% block extra_css %}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+{% endblock %}
+
+{% block content_block_1 %}
+    <div class="container mx-auto px-4 py-8">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-gray-800">Управление эко-заданиями</h1>
+            <a href="{% url 'admin_eco_task_create' %}"
+               class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow flex items-center gap-2 transition">
+                <span class="material-icons text-sm">add</span> Создать задание
+            </a>
+        </div>
+
+        <div class="bg-white shadow-md rounded-lg overflow-hidden">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Название</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Тип</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Награда</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Статус</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Действия</th>
+                </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                {% for task in tasks %}
+                    <tr id="task-row-{{ task.id }}">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">{{ task.title }}</div>
+                            <div class="text-sm text-gray-500 max-w-xs truncate">{{ task.description }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ task.task_type.name|default:"Честное слово" }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                +{{ task.reward }} ECO
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if task.is_active %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">Активно</span>
+                            {% else %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">Скрыто</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-right text-sm font-medium">
+                            <a href="{% url 'admin_eco_task_edit' task.id %}"
+                               class="text-indigo-600 hover:text-indigo-900 mr-4">Редактировать</a>
+                            <button onclick="deleteTask({{ task.id }})" class="text-red-600 hover:text-red-900">
+                                Удалить
+                            </button>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-4 text-center text-gray-500">Заданий пока нет</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        async function deleteTask(id) {
+            if (!confirm('Вы уверены, что хотите удалить это задание? Выполненные пользователями записи останутся в истории.')) return;
+
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            const row = document.getElementById(`task-row-${id}`);
+
+            try {
+                const response = await fetch(`/admin/eco-tasks/${id}/delete/`, {
+                    method: 'POST',
+                    headers: {'X-CSRFToken': csrfToken}
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    row.style.opacity = '0.5';
+                    setTimeout(() => row.remove(), 300);
+                } else {
+                    alert('Ошибка: ' + (data.error || 'Не удалось удалить'));
+                }
+            } catch (e) {
+                alert('Сетевая ошибка');
+            }
+        }
+    </script>
+{% endblock %}
