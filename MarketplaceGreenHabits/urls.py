@@ -25,6 +25,7 @@ from django.views.generic import RedirectView
 from apps.about.views import IndexView
 from apps.administrations.views import AdminDashBoardView, AdminUserManagementView, AdminAuthRequestsUsersView, \
     ModerateRequestView, AdminCheckEcoTasksView, AdminCheckAiAntiFrodeEcoTasksView
+from apps.marketplace.views import EcoTaskDetailsView, EcoTasksTrackerView, CompleteEcoTaskView
 from apps.system.views import NoAccessView
 
 urlpatterns = [
@@ -71,6 +72,10 @@ urlpatterns = [
     #                      Маркетплейс
     # ============================================================
 
+    # --- ЗАДАЧИ ---
+    path('eco-tasks-tracker/', EcoTasksTrackerView.as_view(), name='eco_tasks_tracker'),
+    path('eco-task-details/<int:pk>/', EcoTaskDetailsView.as_view(), name='eco_task_details'),
+    path('eco-tasks/complete/<int:task_id>/', CompleteEcoTaskView.as_view(), name='eco_task_complete'),
     path('marketplace/', IndexView.as_view(), name="marketplace"),
 
     # ============================================================

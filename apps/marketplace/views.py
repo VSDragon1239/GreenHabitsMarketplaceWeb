@@ -4,7 +4,7 @@ from datetime import datetime
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
-from django.views.generic import DetailView
+from django.views.generic import DetailView, TemplateView
 from django.db import transaction as db_transaction, IntegrityError
 from django.shortcuts import get_object_or_404
 
@@ -15,6 +15,33 @@ from apps.ecowallet.services import EcoCoinService
 from apps.marketplace.models import EcoTask, UserTaskCompletion
 
 logger = logging.getLogger(__name__)
+
+
+class EcoTasksTrackerView(LoginRequiredMixin, TemplateView):
+    template_name = "marketplace/tasks/eco_tasks_tracker.html"
+
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+
+        # 1. Доступные (невыполненные) задания
+        completed_ids = UserTaskCompletion.objects.filter(user=user).values_list('task_id', flat=True)
+        available_tasks = EcoTask.objects.filter(is_active=True).exclude(pk__in=completed_ids)
+        context['tasks'] = available_tasks
+
+        # 2. Статистика для верхней зеленой плашки
+        context['total_completed'] = UserTaskCompletion.objects.filter(user=user).count()
+        context['active_tasks_count'] = available_tasks.count()
+
+        # 3. Последние 5 выполненных заданий (для истории внизу)
+        context['recent_completions'] = UserTaskCompletion.objects.filter(
+            user=user
+        ).select_related('task').order_by('-completed_at')[:5]
+
+        return context
 
 
 class EcoTaskDetailsView(LoginRequiredMixin,

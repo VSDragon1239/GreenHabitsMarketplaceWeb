@@ -1,0 +1,115 @@
+{% extends 'index/base_header.html' %}
+{% load static %}
+
+{% block title %}МЗП - Трекер зелёных заданий{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'marketplace/eco_tasks_tracker.css' %}">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+{% endblock %}
+
+{% block content_block_0 %}
+    <h1>
+        МЗП ->
+        <a href="{% url 'profile' %}">Профиль</a> ->
+        Трекер зелёных заданий
+    </h1>
+{% endblock %}
+
+{% block content_block_1 %}
+    <div class="px-12 py-8 bg-gray-50">
+
+        <!-- Overall Statistics (ДИНАМИЧЕСКАЯ ПЛАШКА) -->
+        <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-2xl shadow-lg p-6 mb-6 text-white">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h2 class="text-2xl font-bold mb-1">Общая статистика заданий</h2>
+                    <p class="text-green-100 text-sm">Ваш прогресс по зелёным заданиям</p>
+                </div>
+                <div class="bg-white bg-opacity-20 rounded-xl p-3">
+                    <i class="material-icons text-4xl">assignment_turned_in</i>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="text-center">
+                    <div class="text-4xl font-bold mb-1">{{ total_completed }}</div>
+                    <div class="text-green-100 text-sm">Выполнено всего</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl font-bold mb-1">{{ active_tasks_count }}</div>
+                    <div class="text-green-100 text-sm">Доступно сейчас</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Tasks (СПИСОК ИЗ БД) -->
+        <div class="mb-6">
+            <div class="flex items-center mb-4">
+                <i class="material-icons text-2xl eco-green mr-2">pending_actions</i>
+                <h3 class="text-2xl font-bold text-gray-800">Доступные задания</h3>
+                <span class="ml-auto text-gray-600 text-sm">{{ active_tasks_count }} шт.</span>
+            </div>
+
+            <div class="space-y-3">
+                {% for task in tasks %}
+                    <a href="{% url 'eco_task_details' task.id %}" class="block">
+                        <div class="task-card bg-white rounded-xl shadow-md p-5 border-l-4 border-green-500 hover:shadow-lg transition-shadow">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center flex-1">
+                                    <div class="bg-green-100 rounded-full w-12 h-12 flex items-center justify-center mr-4 flex-shrink-0">
+                                        <i class="material-icons text-2xl eco-green">eco</i>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-lg font-bold text-gray-800">{{ task.title }}</h4>
+                                        <p class="text-gray-500 text-sm">{{ task.description|truncatewords:10 }}</p>
+                                    </div>
+                                </div>
+                                <div class="text-right ml-4 flex-shrink-0">
+                                    <div class="text-3xl font-bold eco-green">+{{ task.reward }}</div>
+                                    <div class="text-gray-500 text-xs">ECO баллов</div>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                {% empty %}
+                    <div class="bg-white rounded-xl shadow-md p-8 text-center">
+                        <i class="material-icons text-5xl text-gray-300 mb-3">check_circle</i>
+                        <h4 class="text-xl font-bold text-gray-500 mb-2">Всё выполнено!</h4>
+                        <p class="text-gray-400">На данный момент у вас нет доступных заданий. Загляните позже.</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Completed Tasks History (ПОСЛЕДНИЕ ВЫПОЛНЕННЫЕ ИЗ БД) -->
+        <div class="bg-white rounded-xl shadow-md p-5">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-gray-800">Последние выполненные</h3>
+                <a href="{% url 'profile' %}" class="text-green-600 hover:text-green-700 text-sm font-semibold">
+                    Все ({{ total_completed }}) →
+                </a>
+            </div>
+            <div class="space-y-2">
+                {% for completion in recent_completions %}
+                    <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                        <div class="flex items-center">
+                            <i class="material-icons text-xl eco-green mr-3">check_circle</i>
+                            <div>
+                                <div class="text-gray-800 font-semibold text-sm">{{ completion.task.title }}</div>
+                                <div class="text-gray-500 text-xs">{{ completion.completed_at|date:"d.m.Y, H:i" }}</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-green-600 font-bold text-lg">+{{ completion.task.reward }}</div>
+                            <div class="text-gray-500 text-xs">баллов</div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="text-center text-gray-400 py-6">
+                        <p>Вы еще не выполнили ни одного задания.</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
