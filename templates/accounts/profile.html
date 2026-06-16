@@ -45,7 +45,7 @@
                         {% if user.get_full_name %}{{ user.get_full_name }}{% else %}{{ user.username }}{% endif %}
                     </h2>
                     <div class="flex items-center gap-2">
-                        <span class="badge bg-{{ display_role.1 }} text-dark">{{ display_role.0 }}</span>
+                        <span class="px-3 py-1 rounded-full text-xs font-bold {{ display_role.1 }}">{{ display_role.0 }}</span>
                         <p class="text-gray-600 text-lg">{{ user.email }}</p>
                     </div>
                 </div>

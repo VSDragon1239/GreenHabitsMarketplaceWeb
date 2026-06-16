@@ -14,11 +14,13 @@ from apps.ecowallet.services import EcoCoinService
 from apps.marketplace.models import UserTaskCompletion
 from apps.trackers.models import UserHabitLog
 
+from django.db.models import Sum, Max
+
 
 class ProfileView(LoginRequiredMixin, RoleRequiredMixin, TemplateView):
-    required_roles = ["Участники", "Руководители", "Администраторы", "Контент менеджер"]
-    login_url = "/login/"  # куда перенаправлять
-    redirect_field_name = "next"  # параметр с origin
+    required_roles = ["Участники", "Руководители", "Администраторы", "Контент менеджер", "Партнёры"]
+    login_url = "/login/"
+    redirect_field_name = "next"
     template_name = "accounts/profile.html"
 
     def get(self, request, *args, **kwargs):
@@ -33,42 +35,48 @@ class ProfileView(LoginRequiredMixin, RoleRequiredMixin, TemplateView):
         profile, _ = Profile.objects.get_or_create(user=user)
         context['profile'] = profile
 
-        # Баланс
+        # Текущий баланс (для покупок)
         eco_balance = EcoCoinService.get_balance(user)
         context['eco_balance'] = eco_balance
 
-        # --- НОВОЕ: Геймификация (Уровень и прогресс) ---
-        # Простая формула: 1 уровень = 100 ECO. Можно усложнить потом.
-        context['level'] = (eco_balance // 100) + 1
-        context['progress_percent'] = eco_balance % 100
+        # --- НОВОЕ: Геймификация (Уровень считается от ВСЕГО заработанного) ---
+        # Суммируем только положительные транзакции (начисления)
+        total_earned = EcoCoinTransaction.objects.filter(
+            wallet__user=user,
+            amount__gt=0
+        ).aggregate(total=Sum('amount'))['total'] or 0
 
-        # --- НОВОЕ: Статистика ---
-        context['completed_tasks_count'] = UserTaskCompletion.objects.filter(user=user).count()
+        context['level'] = (total_earned // 100) + 1
+        context['progress_percent'] = total_earned % 100
+        context['total_earned'] = total_earned  # На всякий случай, если захочешь вывести
 
-        # Считаем максимальную серию из логов привычек
+        # --- Статистика ---
+        context['completed_tasks_count'] = UserTaskCompletion.objects.filter(
+            user=user, status='approved'
+        ).count()
+
         max_streak = UserHabitLog.objects.filter(user=user).aggregate(max_streak=Max('streak_count'))['max_streak']
         context['max_streak'] = max_streak if max_streak else 0
 
-        # --- НОВОЕ: Последняя активность (из транзакций) ---
-        # Берем 5 последних транзакций для ленты
+        # Последняя активность
         context['recent_transactions'] = EcoCoinTransaction.objects.filter(
             wallet__user=user
         ).order_by('-created_at')[:5]
 
-        # Выполненные задания (если нужны где-то еще)
         context['completed_tasks'] = UserTaskCompletion.objects.filter(
             user=user
         ).select_related('task').order_by('reviewed_at')
 
-        # Роли
+        # --- НОВОЕ: Роли с Tailwind CSS классами ---
         roles_priority = {
-            'Администраторы': ('Администратор', 'danger'),
-            'Контент менеджер': ('Контент-менеджер', 'info'),
-            'Руководители': ('Руководитель', 'warning'),
-            'Участники': ('Участник', 'secondary'),
+            'Администраторы': ('Администратор', 'bg-red-500 text-white'),
+            'Контент менеджер': ('Контент-менеджер', 'bg-blue-500 text-white'),
+            'Руководители': ('Руководитель', 'bg-yellow-500 text-white'),
+            'Партнёры': ('Партнёр', 'bg-purple-500 text-white'),
+            'Участники': ('Участник', 'bg-green-500 text-white'),
         }
         user_groups = user.groups.values_list('name', flat=True)
-        context['display_role'] = ('Без роли', 'light')
+        context['display_role'] = ('Без роли', 'bg-gray-400 text-white')
 
         for group_name in user_groups:
             if group_name in roles_priority:

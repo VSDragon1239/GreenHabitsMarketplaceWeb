@@ -81,11 +81,11 @@
                                 <input type="text" id="comment-{{ comp.id }}" placeholder="Комментарий (опционально)"
                                        class="border rounded px-2 py-1 text-xs w-full">
                                 <div class="flex gap-2">
-                                    <button onclick="reviewTask({{ comp.id }}, 'approve')"
+                                    <button onclick="reviewTask({{ comp.id }}, 'approve', '{% url 'review_task_action' comp.id %}')"
                                             class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs transition">
                                         Одобрить
                                     </button>
-                                    <button onclick="reviewTask({{ comp.id }}, 'reject')"
+                                    <button onclick="reviewTask({{ comp.id }}, 'reject', '{% url 'review_task_action' comp.id %}')"
                                             class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs transition">
                                         Отклонить
                                     </button>
@@ -105,13 +105,35 @@
 
     <!-- Скрипт для AJAX обработки без перезагрузки -->
     <script>
-        async function reviewTask(id, action) {
-            const comment = document.getElementById(`comment-${id}`).value;
+        // Функция получения CSRF из куки (надежнее, чем искать в DOM)
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                document.cookie.split(';').forEach(c => {
+                    c = c.trim();
+                    if (c.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(c.substring(name.length + 1));
+                    }
+                });
+            }
+            return cookieValue;
+        }
+
+        async function reviewTask(id, action, url) {
+            // Безопасное получение комментария
+            const commentInput = document.getElementById(`comment-${id}`);
+            const comment = commentInput ? commentInput.value : '';
+
             const row = document.getElementById(`row-${id}`);
-            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value; // Убедись, что токен есть в base шаблоне
+            const csrfToken = getCookie('csrftoken');
+
+            if (!csrfToken) {
+                alert('Ошибка безопасности: CSRF токен не найден.');
+                return;
+            }
 
             try {
-                const response = await fetch(`/admin/moderation/tasks/${id}/review/`, {
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -120,20 +142,24 @@
                     body: `action=${action}&comment=${encodeURIComponent(comment)}`
                 });
 
+                // Проверяем, что ответ действительно JSON
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    throw new Error("Сервер вернул неверный формат (возможно, страница логина)");
+                }
+
                 const data = await response.json();
 
                 if (data.success) {
-                    // Анимация удаления строки из списка
                     row.style.opacity = '0.5';
                     row.style.transition = 'opacity 0.3s';
                     setTimeout(() => row.remove(), 300);
-                    // Можно добавить всплывающее уведомление (toast) с data.message
-                    alert(data.message); // Простое уведомление для MVP
+                    alert(data.message);
                 } else {
                     alert('Ошибка: ' + (data.error || 'Неизвестная ошибка'));
                 }
             } catch (error) {
-                alert('Сетевая ошибка: ' + error);
+                alert('Сетевая ошибка: ' + error.message);
             }
         }
     </script>
