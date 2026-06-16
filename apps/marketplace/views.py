@@ -1,6 +1,5 @@
 import logging
 import uuid
-from datetime import datetime
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
@@ -10,9 +9,9 @@ from django.shortcuts import get_object_or_404
 
 from django.views import View
 
-from apps.ecowallet.models import EcoCoinTransaction, EcoTransactionType
+from apps.ecowallet.models import EcoTransactionType
 from apps.ecowallet.services import EcoCoinService
-from apps.marketplace.models import EcoTask, UserTaskCompletion
+from apps.marketplace.models import EcoTask, UserTaskCompletion, Offer, UserPromoCode
 
 logger = logging.getLogger(__name__)
 
@@ -165,18 +164,6 @@ class AddEcoBonusView(TemplateView):
         return context
 
 
-import uuid
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import JsonResponse
-from django.views import View
-from django.views.generic import TemplateView
-from django.shortcuts import get_object_or_404
-
-from apps.ecowallet.services import EcoCoinService
-from apps.ecowallet.models import EcoTransactionType
-from apps.marketplace.models import Offer, UserPromoCode
-
-
 class MarketplaceView(LoginRequiredMixin, TemplateView):
     """Главная страница маркетплейса"""
     template_name = "marketplace/marketplace.html"
@@ -204,7 +191,7 @@ class ExchangeOfferView(LoginRequiredMixin, View):
             EcoCoinService.debit(
                 user=user,
                 amount=offer.price_in_eco,
-                tx_type=EcoTransactionType.MARKETPLACE_PURCHASE,  # Убедись, что такой тип есть в моделях!
+                tx_type=EcoTransactionType.MARKETPLACE_PURCHASE,
                 external_id=f"offer:{offer.id}:user:{user.id}"
             )
         except Exception as e:
