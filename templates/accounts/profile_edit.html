@@ -1,0 +1,244 @@
+{% extends 'index/base_header.html' %}
+{% load static %}
+
+{% block title %}МЗП - Настройки профиля{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'accounts/profile.css' %}">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+{% endblock %}
+
+{% block content_block_0 %}
+    {#    <h1><a href="{% url 'main' %}">МЗП</a> -> <a href="{% url 'profile' %}">Профиль</a> -> Настройки</h1>#}
+{% endblock %}
+
+{% block content_block_01 %}
+    <div class="content-block-01">
+        <!-- Скрытая форма для отправки POST-запроса -->
+        <form id="logoutForm" method="post" action="{% url 'logout' %}" style="display:none;">
+            {% csrf_token %}
+        </form>
+
+        <!-- Главный контейнер (изначально скрыт классом hidden) -->
+        <div id="logoutModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+             role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+
+            <!-- Контент модального окна -->
+            <div class="modal-content relative transform overflow-hidden rounded-xl bg-white p-6 text-left shadow-2xl transition-all max-w-md w-full"
+                 role="document" tabindex="-1">
+
+                <!-- Кнопка-крестик для закрытия (крупная, с фокусом и hover-эффектом) -->
+                <button id="closeModalCross" type="button"
+                        class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg p-2 transition focus:outline-none focus:ring-2 focus:ring-gray-200"
+                        aria-label="Закрыть">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://w3.org ">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                              d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+
+                <!-- Заголовок -->
+                <header class="mb-4 pr-8">
+                    <h2 id="modalTitle" class="text-xl font-bold text-gray-900">Подтвердите выход</h2>
+                </header>
+
+                <!-- Текст -->
+                <div class="mb-6">
+                    <p class="text-gray-500 text-base">Вы уверены, что хотите выйти из аккаунта?</p>
+                </div>
+
+                <!-- Кнопки действий -->
+                <footer class="flex justify-end gap-3">
+                    <button id="cancelLogout" type="button"
+                            class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-lg transition text-sm">
+                        Отмена
+                    </button>
+                    <button id="confirmLogout" type="button"
+                            class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition text-sm">
+                        Выйти
+                    </button>
+                </footer>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content_block_1 %}
+    <!-- Вывод сообщений об успехе/ошибке -->
+    {% if messages %}
+        <div class="px-12 pt-4">
+            {% for message in messages %}
+                <div class="p-3 mb-2 rounded-lg {% if message.tags == 'success' %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %} text-sm font-medium">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="px-12 py-8 bg-gray-50">
+        <form method="POST" enctype="multipart/form-data" id="profile-form">
+            {% csrf_token %}
+
+            <!-- Personal Information -->
+            <div class="settings-card bg-white rounded-xl shadow-md p-6 mb-6">
+                <div class="flex items-center mb-5">
+                    <i class="material-icons text-2xl eco-green mr-3">person</i>
+                    <h3 class="text-2xl font-bold text-gray-800">Личные данные</h3>
+                </div>
+
+                <div class="flex items-center mb-6">
+                    {% if request.user.profile.avatar %}
+                        <img src="{{ request.user.profile.avatar.url }}"
+                             class="w-20 h-20 rounded-full object-cover mr-5 shadow">
+                    {% else %}
+                        <div class="bg-green-100 rounded-full w-20 h-20 flex items-center justify-center mr-5">
+                            <i class="material-icons text-4xl eco-green">account_circle</i>
+                        </div>
+                    {% endif %}
+                    <div>
+                        <label for="avatar_input"
+                               class="gradient-green text-white px-4 py-2 rounded-lg font-semibold text-sm cursor-pointer">
+                            Загрузить фото
+                        </label>
+                        {{ p_form.avatar }} <!-- Скрытый input из forms.py -->
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="text-gray-700 text-sm font-medium mb-1 block">Имя</label>
+                        {{ u_form.first_name }}
+                    </div>
+                    <div>
+                        <label class="text-gray-700 text-sm font-medium mb-1 block">Фамилия</label>
+                        {{ u_form.last_name }}
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="text-gray-700 text-sm font-medium mb-1 block">Email</label>
+                        {{ u_form.email }}
+                    </div>
+                    <div>
+                        <label class="text-gray-700 text-sm font-medium mb-1 block">Телефон</label>
+                        {{ p_form.phone }}
+                    </div>
+                </div>
+
+                <!-- Заглушка: Факультет и Группа (нет в БД) -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="opacity-50 pointer-events-none">
+                        <label class="text-gray-700 text-sm font-medium mb-1 block">Факультет</label>
+                        <input type="text" value="ФКНТ" readonly
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg text-base bg-gray-100">
+                    </div>
+                    <div class="opacity-50 pointer-events-none">
+                        <label class="text-gray-700 text-sm font-medium mb-1 block">Группа</label>
+                        <input type="text" value="ПИ-301" readonly
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg text-base bg-gray-100">
+                    </div>
+                </div>
+
+                <!-- О себе -->
+                <div class="mt-4">
+                    <label class="text-gray-700 text-sm font-medium mb-1 block">О себе</label>
+                    {{ p_form.description }}
+                </div>
+            </div>
+
+            <!-- Безопасность (Заглушка) -->
+            <div class="settings-card bg-white rounded-xl shadow-md p-6 mb-6">
+                <div class="flex items-center mb-5">
+                    <i class="material-icons text-2xl eco-green mr-3">security</i>
+                    <h3 class="text-2xl font-bold text-gray-800">Безопасность</h3>
+                </div>
+                <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                    <div class="flex items-center">
+                        <i class="material-icons text-xl eco-green mr-3">lock</i>
+                        <div>
+                            <div class="text-gray-800 font-semibold text-base">Смена пароля</div>
+                            <div class="text-gray-500 text-sm">Для безопасности вашего аккаунта</div>
+                        </div>
+                    </div>
+                    <a href="{% url 'password_reset' %}"
+                       class="text-green-600 hover:text-green-700 font-semibold text-sm">Изменить</a>
+                </div>
+            </div>
+
+            <!-- Уведомления и Приватность (Заглушки UI) -->
+            <div class="settings-card bg-white rounded-xl shadow-md p-6 mb-6 opacity-50 pointer-events-none">
+                <div class="flex items-center mb-5">
+                    <i class="material-icons text-2xl eco-green mr-3">notifications</i>
+                    <h3 class="text-2xl font-bold text-gray-800">Уведомления и Приватность <span
+                            class="text-sm font-normal text-gray-400 ml-2">(Скоро)</span></h3>
+                </div>
+                <p class="text-gray-500 text-sm">Настройки уведомлений и приватности будут доступны в следующей версии
+                    приложения.</p>
+            </div>
+
+            <!-- О приложении -->
+            <div class="settings-card bg-white rounded-xl shadow-md p-6 mb-6">
+                <div class="flex items-center mb-4">
+                    <i class="material-icons text-2xl eco-green mr-3">info</i>
+                    <h3 class="text-2xl font-bold text-gray-800">О приложении</h3>
+                </div>
+
+                <div class="space-y-3 mb-5">
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600">Версия приложения:</span>
+                        <span class="font-semibold eco-green">1.0.0</span>
+                    </div>
+                    <div class="flex items-center justify-between py-2">
+                        <div class="flex items-center">
+                            <i class="material-icons text-lg text-gray-500 mr-2">description</i>
+                            <span class="text-gray-700 font-medium text-base">Политика конфиденциальности</span>
+                        </div>
+                        <i class="material-icons text-gray-400">chevron_right</i>
+                    </div>
+                    <div class="flex items-center justify-between py-2">
+                        <div class="flex items-center">
+                            <i class="material-icons text-lg text-gray-500 mr-2">gavel</i>
+                            <span class="text-gray-700 font-medium text-base">Условия использования</span>
+                        </div>
+                        <i class="material-icons text-gray-400">chevron_right</i>
+                    </div>
+                    <div class="flex items-center justify-between py-2">
+                        <div class="flex items-center">
+                            <i class="material-icons text-lg text-gray-500 mr-2">help</i>
+                            <span class="text-gray-700 font-medium text-base">Связь с поддержкой</span>
+                        </div>
+                        <i class="material-icons text-gray-400">chevron_right</i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Сохранить или выйти -->
+            <div class="settings-card bg-white rounded-xl shadow-md p-6 mb-6">
+                <div class="space-y-3">
+                    <div class="flex-column items-center justify-between">
+                        <!-- Кнопка сохранения -->
+                        <button type="submit"
+                                class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-4 rounded-xl transition shadow-md flex items-center justify-center text-lg">
+                            <i class="material-icons mr-2">save</i> Сохранить изменения
+                        </button>
+                    </div>
+                    <div class="flex-column items-center justify-between">
+                        <!-- Кнопка выхода -->
+                        <button id="logoutBtn"
+                                class="w-full bg-red-50 text-red-600 border-2 border-red-200 px-4 py-3 rounded-lg font-semibold text-base hover:bg-red-100 transition"
+                                type="button">Выйти из аккаунта
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'accounts/profile_edit.js' %}"></script>
+    <script src="{% static 'accounts/profile.js' %}" defer></script>
+{% endblock %}

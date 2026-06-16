@@ -1,0 +1,151 @@
+{% extends 'index/base_header.html' %}
+{% load static %}
+
+{% block title %}МЗП - Профиль{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'accounts/profile.css' %}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- ВАЖНО: Добавлена библиотека иконок Material Icons, без нее не работают иконки! -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+{% endblock %}
+
+{% block content_block_0 %}{% endblock %}
+
+{% block content_block_01 %}{% endblock %}
+
+{% block content_block_1 %}
+    {% if messages %}
+        <div class="px-12 pt-4">
+            {% for message in messages %}
+                <div class="p-3 mb-2 rounded-lg {% if message.tags == 'success' %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %} text-sm font-medium">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    <div class="px-12 py-8 bg-gray-50">
+
+        <!-- Profile Card -->
+        <div class="bg-white rounded-2xl shadow-lg p-8 mb-6">
+            <div class="flex items-center mb-6">
+                <!-- ДИНАМИЧЕСКИЙ АВАТАР -->
+                {% if profile.avatar %}
+                    <img src="{{ profile.avatar.url }}"
+                         class="rounded-full w-24 h-24 mr-6 flex-shrink-0 object-cover shadow-md" alt="Аватар">
+                {% else %}
+                    <div class="bg-green-100 rounded-full w-24 h-24 flex items-center justify-center mr-6 flex-shrink-0">
+                        <i class="material-icons text-5xl eco-green">person</i>
+                    </div>
+                {% endif %}
+
+                <div class="flex-grow">
+                    <!-- ДИНАМИЧЕСКОЕ ИМЯ И РОЛЬ -->
+                    <h2 class="text-3xl font-bold text-gray-800 mb-2">
+                        {% if user.get_full_name %}{{ user.get_full_name }}{% else %}{{ user.username }}{% endif %}
+                    </h2>
+                    <div class="flex items-center gap-2">
+                        <span class="badge bg-{{ display_role.1 }} text-dark">{{ display_role.0 }}</span>
+                        <p class="text-gray-600 text-lg">{{ user.email }}</p>
+                    </div>
+                </div>
+                <a href="{% url 'profile_edit' %}">
+                    <button class="border-2 border-green-500 text-green-700 px-6 py-2 rounded-full font-semibold text-sm hover:bg-green-50 transition">
+                        Редактировать
+                    </button>
+                </a>
+            </div>
+
+            <!-- Level & Progress (ДИНАМИЧЕСКИЙ РАСЧЕТ) -->
+            <div class="bg-gradient-to-r from-green-50 to-white rounded-xl p-6 mb-6 border-l-4 border-green-500">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center">
+                        <i class="material-icons text-2xl eco-green mr-2">stars</i>
+                        <span class="text-gray-700 font-semibold text-lg">Уровень {{ level }}</span>
+                    </div>
+                    <span class="text-gray-600 text-sm">{{ progress_percent }}% до Уровня {{ level|add:"1" }}</span>
+                </div>
+                <div class="bg-gray-200 rounded-full h-3 overflow-hidden">
+                    <div class="progress-bar h-full" style="width: {{ progress_percent }}%"></div>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">* Каждые 100 ECO повышают ваш уровень</p>
+            </div>
+
+            <!-- Stats Grid (РЕАЛЬНАЯ СТАТИСТИКА) -->
+            <div class="grid grid-cols-3 gap-4">
+                <div class="text-center bg-green-50 rounded-xl p-4">
+                    <div class="text-4xl font-bold eco-green mb-1">{{ eco_balance }}</div>
+                    <div class="text-gray-600 text-sm">ECO баллов</div>
+                </div>
+                <div class="text-center bg-green-50 rounded-xl p-4">
+                    <div class="text-4xl font-bold eco-green mb-1">{{ completed_tasks_count }}</div>
+                    <div class="text-gray-600 text-sm">Заданий</div>
+                </div>
+                <div class="text-center bg-green-50 rounded-xl p-4">
+                    <div class="text-4xl font-bold eco-green mb-1">{{ max_streak }}</div>
+                    <div class="text-gray-600 text-sm">Дней подряд (макс)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Achievements Section (ЗАГЛУШКА, ПОКА НЕТ МОДЕЛИ В БД) -->
+        <!--
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+            <div class="flex items-center justify-between mb-5">
+                <h3 class="text-2xl font-bold text-gray-800">Мои достижения</h3>
+                <span class="text-gray-600 text-sm">Скоро</span>
+            </div>
+            <div class="text-center text-gray-400 py-6">
+                <i class="material-icons text-5xl mb-2">emoji_events</i>
+                <p>Система достижений находится в разработке</p>
+            </div>
+        </div>
+        -->
+
+        <!-- Recent Activity (РЕАЛЬНАЯ ЛЕНТА ИЗ БАЗЫ) -->
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+            <div class="flex items-center justify-between mb-5">
+                <h3 class="text-2xl font-bold text-gray-800">Последняя активность</h3>
+            </div>
+            <div class="space-y-3">
+                {% for tx in recent_transactions %}
+                    <div class="flex items-center justify-between bg-gray-50 rounded-lg p-3">
+                        <div class="flex items-center">
+                            <!-- Иконки в зависимости от типа транзакции -->
+                            {% if 'task' in tx.tx_type %}
+                                <i class="material-icons text-xl eco-green mr-3">check_circle</i>
+                            {% elif 'habit' in tx.tx_type %}
+                                <i class="material-icons text-xl text-orange-500 mr-3">local_fire_department</i>
+                            {% elif 'blog' in tx.tx_type %}
+                                <i class="material-icons text-xl text-blue-500 mr-3">article</i>
+                            {% else %}
+                                <i class="material-icons text-xl text-gray-500 mr-3">monetization_on</i>
+                            {% endif %}
+
+                            <div>
+                                <!-- Читабельное название типа -->
+                                <div class="text-gray-800 font-medium text-sm">{{ tx.get_tx_type_display }}</div>
+                                <div class="text-gray-500 text-xs">{{ tx.created_at|date:"d.m.Y, H:i" }}</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <!-- Знак + если начисление, красный если списание -->
+                            <div class="text-2xl font-bold {% if tx.amount > 0 %}eco-green{% else %}text-red-500{% endif %}">
+                                {% if tx.amount > 0 %}+{% endif %}{{ tx.amount }}
+                            </div>
+                            <div class="text-gray-500 text-xs">ECO</div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="text-center text-gray-400 py-4">
+                        <p>У вас пока нет активности. Выполните задание или отметьте привычку!</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'accounts/profile.js' %}" defer></script>
+{% endblock %}

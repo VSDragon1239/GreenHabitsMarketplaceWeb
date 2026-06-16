@@ -23,6 +23,7 @@ from django.conf.urls.static import static
 from django.views.generic import RedirectView
 
 from apps.about.views import IndexView
+from apps.accounts.views import ProfileView, EditProfileView
 from apps.administrations.views import AdminDashBoardView, AdminUserManagementView, AdminAuthRequestsUsersView, \
     ModerateRequestView, AdminCheckEcoTasksView, AdminCheckAiAntiFrodeEcoTasksView, AdminEcoTasksManageView, \
     AdminEcoTaskCreateView, AdminEcoTaskUpdateView, AdminEcoTaskDeleteView
@@ -77,7 +78,8 @@ urlpatterns = [
     #                      Пользователи
     # ============================================================
     path('contacts/', IndexView.as_view(), name="contacts"),
-    path('profile/', IndexView.as_view(), name="profile"),
+    path('profile/', ProfileView.as_view(), name='profile'),  # Профиль пользователя
+    path('profile/edit/', EditProfileView.as_view(), name='profile_edit'),
 
     # ============================================================
     #                      Маркетплейс
