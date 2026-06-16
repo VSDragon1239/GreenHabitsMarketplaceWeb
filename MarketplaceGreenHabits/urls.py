@@ -62,15 +62,16 @@ urlpatterns = [
     path('admin-dashboard/', AdminDashBoardView.as_view(), name="admin_dashboard"),
     path('admin-auth-requests/', AdminAuthRequestsUsersView.as_view(), name="admin_registration_requests"),
     path('admin/users/', AdminUserManagementView.as_view(), name='admin_users_management'),
-    path('api/moderate-request/<int:pk>/', ModerateRequestView.as_view(), name='api_moderate_request'),     # Управляет кнопками для заявок на регистрацию
+    path('api/moderate-request/<int:pk>/', ModerateRequestView.as_view(), name='api_moderate_request'),
+    # Управляет кнопками для заявок на регистрацию
     path('admin/check/eco-tasks/', AdminCheckEcoTasksView.as_view(), name='admin_check_eco_tasks'),
-    path('admin/check/eco-tasks-ai/', AdminCheckAiAntiFrodeEcoTasksView.as_view(), name='admin_check_ai_frode_eco_tasks'),
+    path('admin/check/eco-tasks-ai/', AdminCheckAiAntiFrodeEcoTasksView.as_view(),
+         name='admin_check_ai_frode_eco_tasks'),
 
     path('admin/eco-tasks/', AdminEcoTasksManageView.as_view(), name='admin_eco_tasks_manage'),
     path('admin/eco-tasks/create/', AdminEcoTaskCreateView.as_view(), name='admin_eco_task_create'),
     path('admin/eco-tasks/<int:pk>/edit/', AdminEcoTaskUpdateView.as_view(), name='admin_eco_task_edit'),
     path('admin/eco-tasks/<int:pk>/delete/', AdminEcoTaskDeleteView.as_view(), name='admin_eco_task_delete'),
-]
 
     # ============================================================
     #                      Пользователи
@@ -85,12 +86,10 @@ urlpatterns = [
     path('marketplace/', IndexView.as_view(), name="marketplace"),
     # path('marketplace/exchange/<int:pk>/', ExchangeOfferView.as_view(), name='marketplace_exchange'),
 
-
     # --- ЗАДАЧИ ---
     path('eco-tasks-tracker/', EcoTasksTrackerView.as_view(), name='eco_tasks_tracker'),
     path('eco-task-details/<int:pk>/', EcoTaskDetailsView.as_view(), name='eco_task_details'),
     path('eco-tasks/complete/<int:task_id>/', CompleteEcoTaskView.as_view(), name='eco_task_complete'),
-
 
     # --- ПРИВЫЧКИ ---
     path('eco-habits-tracker/', EcoHabitsTrackerView.as_view(), name='eco_habits_tracker'),
@@ -98,7 +97,6 @@ urlpatterns = [
     path('categories/<int:pk>/eco-habits/', EcoHabitsView.as_view(), name='eco_habits'),
     path('categories/<int:pk1>/eco-habits/<int:pk2>/details', EcoHabitDetailsView.as_view(), name='eco_habit_details'),
     path('eco-habits/log/<int:pk>/', LogEcoHabitView.as_view(), name='eco_habit_log'),
-
 
     # --- ПОЛУЧЕННЫЕ БОНУСЫ - --
     path('eco-bonus-list/', EcoBonusListView.as_view(), name='eco_bonus_list'),
