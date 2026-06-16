@@ -90,3 +90,36 @@ class UserTaskCompletion(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.task.title} [{self.status}]"
+
+
+class Offer(models.Model):
+    """Конкретное предложение (Скидка 10% на обеды за 500 монет)"""
+    partner = models.ForeignKey(Partner, on_delete=models.CASCADE, related_name="offers")
+    title = models.CharField(max_length=255, verbose_name="Название оффера")
+    description = models.TextField(verbose_name="Описание")
+    price_in_eco = models.IntegerField(verbose_name="Цена в ECO-коинах")
+    category = models.CharField(max_length=50, choices=OfferCategory.choices, verbose_name="Категория")
+    is_active = models.BooleanField(default=True, verbose_name="Активно")
+
+    class Meta:
+        verbose_name = "Предложение"
+        verbose_name_plural = "Предложения маркетплейса"
+
+    def __str__(self):
+        return f"{self.title} ({self.price_in_eco} ECO)"
+
+
+class UserPromoCode(models.Model):
+    """Выданный пользователю промокод"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="promo_codes")
+    offer = models.ForeignKey(Offer, on_delete=models.PROTECT, related_name="issued_codes")
+    code = models.CharField(max_length=20, unique=True, verbose_name="Код промокода")
+    is_used = models.BooleanField(default=False, verbose_name="Использован")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Промокод пользователя"
+        verbose_name_plural = "Промокоды пользователей"
+
+    def __str__(self):
+        return f"{self.code} ({'Использован' if self.is_used else 'Активен'})"
