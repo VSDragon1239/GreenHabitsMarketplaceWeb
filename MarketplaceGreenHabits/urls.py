@@ -27,6 +27,8 @@ from apps.administrations.views import AdminDashBoardView, AdminUserManagementVi
     ModerateRequestView, AdminCheckEcoTasksView, AdminCheckAiAntiFrodeEcoTasksView
 from apps.marketplace.views import EcoTaskDetailsView, EcoTasksTrackerView, CompleteEcoTaskView
 from apps.system.views import NoAccessView
+from apps.trackers.views import EcoHabitsTrackerView, EcoHabitsCategoriesView, EcoHabitsView, EcoHabitDetailsView, \
+    LogEcoHabitView
 
 urlpatterns = [
     path('favicon.ico', RedirectView.as_view(url=settings.STATIC_URL + 'favicon.png')),
@@ -72,11 +74,20 @@ urlpatterns = [
     #                      Маркетплейс
     # ============================================================
 
+    path('marketplace/', IndexView.as_view(), name="marketplace"),
+    # path('marketplace/exchange/<int:pk>/', ExchangeOfferView.as_view(), name='marketplace_exchange'),
+
     # --- ЗАДАЧИ ---
     path('eco-tasks-tracker/', EcoTasksTrackerView.as_view(), name='eco_tasks_tracker'),
     path('eco-task-details/<int:pk>/', EcoTaskDetailsView.as_view(), name='eco_task_details'),
     path('eco-tasks/complete/<int:task_id>/', CompleteEcoTaskView.as_view(), name='eco_task_complete'),
-    path('marketplace/', IndexView.as_view(), name="marketplace"),
+
+    # --- ПРИВЫЧКИ ---
+    path('eco-habits-tracker/', EcoHabitsTrackerView.as_view(), name='eco_habits_tracker'),
+    path('eco-habits-categories/', EcoHabitsCategoriesView.as_view(), name='eco_habits_categories'),
+    path('categories/<int:pk>/eco-habits/', EcoHabitsView.as_view(), name='eco_habits'),
+    path('categories/<int:pk1>/eco-habits/<int:pk2>/details', EcoHabitDetailsView.as_view(), name='eco_habit_details'),
+    path('eco-habits/log/<int:pk>/', LogEcoHabitView.as_view(), name='eco_habit_log'),
 
     # ============================================================
     #                      Спонсоры
