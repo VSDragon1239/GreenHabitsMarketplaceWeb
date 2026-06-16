@@ -88,18 +88,18 @@
                                 Маркетплейс
                             </a>
                         {% endif %}
-                        {% if request.resolver_match.url_name != 'rating_board' %}
-                            <a href="{% url 'rating_board' %}"
-                               class="text-gray-700 hover:text-green-600 font-medium text-base">
-                                Рейтинг
-                            </a>
-                        {% endif %}
-                        {% if request.resolver_match.url_name != 'events' %}
-                            <a href="{% url 'events' pk=1 %}"
-                               class="text-gray-700 hover:text-green-600 font-medium text-base">
-                                События
-                            </a>
-                        {% endif %}
+{#                        {% if request.resolver_match.url_name != 'rating_board' %}#}
+{#                            <a href="{% url 'rating_board' %}"#}
+{#                               class="text-gray-700 hover:text-green-600 font-medium text-base">#}
+{#                                Рейтинг#}
+{#                            </a>#}
+{#                        {% endif %}#}
+{#                        {% if request.resolver_match.url_name != 'events' %}#}
+{#                            <a href="{% url 'events' pk=1 %}"#}
+{#                               class="text-gray-700 hover:text-green-600 font-medium text-base">#}
+{#                                События#}
+{#                            </a>#}
+{#                        {% endif %}#}
                     {% endif %}
 
                     <div class="relative">
