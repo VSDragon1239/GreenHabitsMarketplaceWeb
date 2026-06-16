@@ -69,3 +69,20 @@ def moderate_task_completion(completion: UserTaskCompletion) -> dict:
         # Если AnythingLLM вернул ошибку, пробуем прочитать текст ответа
         err_text = e.response.text if hasattr(e, 'response') and e.response else ""
         raise Exception(f"Сетевая ошибка к ИИ: {e}. Ответ сервера: {err_text}")
+
+
+def apply_ai_verdict(completion: UserTaskCompletion, verdict: dict) -> None:
+    """Применяет вердикт ИИ к completion: меняет статус и сохраняет feedback."""
+    ai_verdict_str = verdict.get('verdict', 'needs_human').lower()
+    reason = verdict.get('reason', '—')
+
+    completion.ai_feedback = f"[{ai_verdict_str.upper()}] {reason}"
+
+    if ai_verdict_str == 'approved':
+        completion.status = UserTaskCompletion.Status.AI_APPROVED
+    elif ai_verdict_str == 'rejected':
+        completion.status = UserTaskCompletion.Status.AI_REJECTED
+    else:  # needs_human
+        completion.status = UserTaskCompletion.Status.PENDING
+
+    completion.save(update_fields=['status', 'ai_feedback', 'reviewed_at'])

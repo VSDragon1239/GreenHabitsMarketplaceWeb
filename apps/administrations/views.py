@@ -369,7 +369,6 @@ class AdminEcoTaskDeleteView(RoleRequiredMixin, View):
 
 from apps.marketplace.ai_moderation import moderate_task_completion, apply_ai_verdict
 
-
 class AdminRunAIModerationView(RoleRequiredMixin, View):
     """AJAX View для запуска ИИ-проверки одного задания"""
     required_roles = ['Администраторы']
