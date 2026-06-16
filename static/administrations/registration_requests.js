@@ -1,6 +1,5 @@
 /**
  * Управление пользователями + Модерация заявок
- * Модалки управляются ТОЛЬКО через Tailwind-утилиты (без кастомного CSS)
  */
 (function () {
     'use strict';
@@ -23,43 +22,27 @@
         return cookieValue;
     }
 
-    /**
-     * Показать модалку через Tailwind-классы.
-     * overlayEl — внешний div (fixed inset-0)
-     * contentEl — внутренний div с белым фоном (для scale-анимации)
-     */
     function showModal(overlayEl, contentEl) {
-        // 1. Убираем hidden, но элемент ещё прозрачный (opacity-0)
         overlayEl.classList.remove('hidden');
-        // 2. Принудительный reflow — чтобы браузер отрисовал opacity-0
         void overlayEl.offsetWidth;
-        // 3. Меняем opacity и scale
         overlayEl.classList.remove('opacity-0');
         overlayEl.classList.add('opacity-100');
-
         if (contentEl) {
             contentEl.classList.remove('scale-95', 'opacity-0');
             contentEl.classList.add('scale-100', 'opacity-100');
         }
-
         overlayEl.setAttribute('aria-hidden', 'false');
     }
 
     function hideModal(overlayEl, contentEl) {
         overlayEl.classList.remove('opacity-100');
         overlayEl.classList.add('opacity-0');
-
         if (contentEl) {
             contentEl.classList.remove('scale-100', 'opacity-100');
             contentEl.classList.add('scale-95', 'opacity-0');
         }
-
         overlayEl.setAttribute('aria-hidden', 'true');
-
-        // Ждём завершения анимации, потом прячем окончательно
-        setTimeout(() => {
-            overlayEl.classList.add('hidden');
-        }, 200);
+        setTimeout(() => overlayEl.classList.add('hidden'), 200);
     }
 
     function showToast(message, isSuccess = true) {
@@ -75,7 +58,7 @@
             : 'material-icons text-red-400';
 
         toast.classList.remove('hidden');
-        void toast.offsetWidth; // reflow
+        void toast.offsetWidth;
         toast.classList.remove('translate-y-4', 'opacity-0');
         toast.classList.add('translate-y-0', 'opacity-100');
 
@@ -86,6 +69,10 @@
         }, 3000);
     }
 
+    function getRawPhone(formatted) {
+        return (formatted || '').replace(/\D/g, '');
+    }
+
     // ── Данные из шаблона ─────────────────────────────────────
     const usersData = window.__usersData || {};
     const CSRF_TOKEN = window.__csrfToken || getCookie('csrftoken');
@@ -93,7 +80,7 @@
     const MODERATE_URL_TEMPLATE = window.__moderateUrlTemplate;
 
     // ══════════════════════════════════════════════════════════
-    //  ПОДСИСТЕМА 1: Модерация заявок на регистрацию
+    //  ПОДСИСТЕМА 1: Модерация заявок
     // ══════════════════════════════════════════════════════════
 
     const ApproveModal = {
@@ -192,7 +179,6 @@
         }
     }
 
-    // Генерация инициалов
     function initInitials() {
         $$('.initials').forEach(el => {
             const parts = (el.dataset.name || '').split(' ').filter(Boolean);
@@ -207,7 +193,7 @@
     }
 
     // ══════════════════════════════════════════════════════════
-    //  ПОДСИСТЕМА 2: Управление пользователями (CRUD)
+    //  ПОДСИСТЕMA 2: Управление пользователями (CRUD)
     // ══════════════════════════════════════════════════════════
 
     const UserModal = {
@@ -258,6 +244,10 @@
                 return;
             }
 
+            // TODO: Если у пользователя нет Profile (автосозданный суперпользователь),
+            //       POST-запрос на редактирование вернёт 500 (RelatedObjectDoesNotExist).
+            //       Исправить в бэкенде: Profile.objects.get_or_create(user=user)
+
             $('#userModalTitle').textContent = 'Редактирование пользователя';
             $('#formAction').value = 'edit';
             $('#formUserId').value = userId;
@@ -269,7 +259,7 @@
             $('#f_username').value = data.username;
             $('#f_first_name').value = data.first_name;
             $('#f_last_name').value = data.last_name;
-            $('#f_phone').value = data.phone; // Маска подхватит при фокусе
+            $('#f_phone').value = data.phone;
             $('#f_description').value = data.description;
             $('#f_is_active').checked = data.is_active;
             $('#f_is_staff').checked = data.is_staff;
@@ -300,7 +290,44 @@
             hideModal(this.overlay, this.content);
         },
 
-        // ... clearErrors, showErrors, updateGroupLabels — без изменений ...
+        clearErrors() {
+            const errorsEl = $('#userFormErrors');
+            if (errorsEl) errorsEl.classList.add('hidden');
+            const listEl = $('#userErrorList');
+            if (listEl) listEl.innerHTML = '';
+            $$('.field-error').forEach(el => el.classList.remove('field-error'));
+        },
+
+        showErrors(errors) {
+            const listEl = $('#userErrorList');
+            if (!listEl) return;
+            listEl.innerHTML = '';
+
+            if (typeof errors === 'string') {
+                const li = document.createElement('li');
+                li.textContent = errors;
+                listEl.appendChild(li);
+            } else if (typeof errors === 'object') {
+                for (const [field, messages] of Object.entries(errors)) {
+                    (Array.isArray(messages) ? messages : [messages]).forEach(msg => {
+                        const li = document.createElement('li');
+                        li.textContent = msg;
+                        listEl.appendChild(li);
+                    });
+                    const input = $(`#f_${field}`) || $(`[name="${field}"]`);
+                    if (input) input.classList.add('field-error');
+                }
+            }
+
+            $('#userFormErrors').classList.remove('hidden');
+        },
+
+        updateGroupLabels() {
+            $$('.group-checkbox-label').forEach(label => {
+                const cb = label.querySelector('.group-checkbox');
+                label.classList.toggle('group-selected', cb && cb.checked);
+            });
+        },
 
         async submit(e) {
             e.preventDefault();
@@ -406,104 +433,6 @@
     };
 
     // ══════════════════════════════════════════════════════════
-    //  ГЛОБАЛЬНОЕ ДЕЛЕГИРОВАНИЕ СОБЫТИЙ
-    // ══════════════════════════════════════════════════════════
-
-    document.addEventListener('click', function (e) {
-        const trigger = e.target.closest('[data-action]');
-        if (!trigger) return;
-
-        const action = trigger.dataset.action;
-
-        switch (action) {
-            // ── Модерация заявок ──
-            case 'open-approve-modal':
-                ApproveModal.open(
-                    parseInt(trigger.dataset.requestId),
-                    trigger.dataset.fio,
-                    trigger.dataset.group,
-                    trigger.dataset.email
-                );
-                break;
-
-            case 'close-approve-modal':
-                ApproveModal.close();
-                break;
-
-            case 'reject-request':
-                rejectRequest(parseInt(trigger.dataset.requestId));
-                break;
-
-            // ── Управление пользователями ──
-            case 'open-user-create':
-                UserModal.openCreate();
-                break;
-
-            case 'open-user-edit':
-                UserModal.openEdit(parseInt(trigger.dataset.userId));
-                break;
-
-            case 'close-user-modal':
-                UserModal.close();
-                break;
-
-            case 'confirm-user-delete':
-                DeleteModal.open(
-                    parseInt(trigger.dataset.userId),
-                    trigger.dataset.username
-                );
-                break;
-
-            case 'close-delete-modal':
-                DeleteModal.close();
-                break;
-        }
-    });
-
-    // Подсветка чекбоксов групп
-    document.addEventListener('change', function (e) {
-        if (e.target.classList.contains('group-checkbox')) {
-            UserModal.updateGroupLabels();
-        }
-    });
-
-    // Закрытие по Escape
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') {
-            if ($('#approveModal') && !$('#approveModal').classList.contains('hidden')) {
-                ApproveModal.close();
-            }
-            if ($('#userModal') && !$('#userModal').classList.contains('hidden')) {
-                UserModal.close();
-            }
-            if ($('#deleteModal') && !$('#deleteModal').classList.contains('hidden')) {
-                DeleteModal.close();
-            }
-        }
-    });
-
-    // ══════════════════════════════════════════════════════════
-    //  ИНИЦИАЛИЗАЦИЯ
-    // ══════════════════════════════════════════════════════════
-
-    document.addEventListener('DOMContentLoaded', function () {
-        initInitials();
-        ApproveModal.init();
-        ApproveModal.bindEvents();
-        UserModal.init();
-        DeleteModal.init();
-        TableFilter.init();
-        initPhoneMask();
-        initPartnerToggle();
-
-        const userForm = $('#userForm');
-        if (userForm) userForm.addEventListener('submit', (e) => UserModal.submit(e));
-
-        const deleteForm = $('#deleteForm');
-        if (deleteForm) deleteForm.addEventListener('submit', (e) => DeleteModal.submit(e));
-    });
-
-    // ══════════════════════════════════════════════════════════
     //  ФИЛЬТРАЦИЯ И СОРТИРОВКА ТАБЛИЦЫ
     // ══════════════════════════════════════════════════════════
 
@@ -516,6 +445,16 @@
             $('#resetFilters')?.addEventListener('click', () => this.reset());
         },
 
+        /**
+         * Парсит data-roles в массив, убирая пустые элементы и пробелы.
+         * data-roles="Участники,is_superuser" → ["Участники", "is_superuser"]
+         * data-roles=",is_superuser"           → ["is_superuser"]
+         */
+        _parseRoles(raw) {
+            if (!raw) return [];
+            return raw.split(',').map(r => r.trim()).filter(Boolean);
+        },
+
         apply() {
             const search = ($('#searchInput')?.value || '').toLowerCase().trim();
             const role = $('#filterRole')?.value || '';
@@ -526,12 +465,11 @@
             let visibleCount = 0;
 
             rows.forEach(row => {
-                const name = row.dataset.name || '';
-                const email = row.dataset.email || '';
-                const phone = row.dataset.phone || '';
-                const rowRoles = row.dataset.roles || '';
+                const name = (row.dataset.name || '').toLowerCase();
+                const email = (row.dataset.email || '').toLowerCase();
+                const phone = (row.dataset.phone || '').toLowerCase();
+                const rowRoles = this._parseRoles(row.dataset.roles);
                 const rowStatus = row.dataset.active || '';
-                const balance = parseInt(row.dataset.balance) || 0;
 
                 // Фильтр поиска
                 const matchSearch = !search ||
@@ -539,8 +477,8 @@
                     email.includes(search) ||
                     phone.includes(search);
 
-                // Фильтр по роли
-                const matchRole = !role || rowRoles.split(',').includes(role);
+                // Фильтр по роли — ищем точное совпадение в массиве
+                const matchRole = !role || rowRoles.includes(role);
 
                 // Фильтр по статусу
                 const matchStatus = !status || rowStatus === status;
@@ -599,12 +537,10 @@
         const phoneInput = $('#f_phone');
         if (!phoneInput) return;
 
-        phoneInput.addEventListener('input', function (e) {
-            let value = this.value.replace(/\D/g, ''); // Убираем всё кроме цифр
+        phoneInput.addEventListener('input', function () {
+            let value = this.value.replace(/\D/g, '');
 
-            // Если начинается с 8 — заменяем на 7
             if (value.startsWith('8')) value = '7' + value.slice(1);
-            // Если не начинается с 7 — добавляем
             if (value.length > 0 && !value.startsWith('7')) value = '7' + value;
 
             let formatted = '';
@@ -617,18 +553,12 @@
             this.value = formatted;
         });
 
-        // Не давать стереть +7
         phoneInput.addEventListener('keydown', function (e) {
             const cursorPos = this.selectionStart;
             if ((e.key === 'Backspace' || e.key === 'Delete') && cursorPos <= 2) {
                 e.preventDefault();
             }
         });
-    }
-
-    // Вспомогательная: получить чистый номер из маски
-    function getRawPhone(formatted) {
-        return (formatted || '').replace(/\D/g, '');
     }
 
     // ══════════════════════════════════════════════════════════
@@ -652,5 +582,92 @@
             }
         });
     }
+
+    // ══════════════════════════════════════════════════════════
+    //  ГЛОБАЛЬНОЕ ДЕЛЕГИРОВАНИЕ СОБЫТИЙ
+    // ══════════════════════════════════════════════════════════
+
+    document.addEventListener('click', function (e) {
+        const trigger = e.target.closest('[data-action]');
+        if (!trigger) return;
+
+        const action = trigger.dataset.action;
+
+        switch (action) {
+            case 'open-approve-modal':
+                ApproveModal.open(
+                    parseInt(trigger.dataset.requestId),
+                    trigger.dataset.fio,
+                    trigger.dataset.group,
+                    trigger.dataset.email
+                );
+                break;
+            case 'close-approve-modal':
+                ApproveModal.close();
+                break;
+            case 'reject-request':
+                rejectRequest(parseInt(trigger.dataset.requestId));
+                break;
+            case 'open-user-create':
+                UserModal.openCreate();
+                break;
+            case 'open-user-edit':
+                UserModal.openEdit(parseInt(trigger.dataset.userId));
+                break;
+            case 'close-user-modal':
+                UserModal.close();
+                break;
+            case 'confirm-user-delete':
+                DeleteModal.open(
+                    parseInt(trigger.dataset.userId),
+                    trigger.dataset.username
+                );
+                break;
+            case 'close-delete-modal':
+                DeleteModal.close();
+                break;
+        }
+    });
+
+    document.addEventListener('change', function (e) {
+        if (e.target.classList.contains('group-checkbox')) {
+            UserModal.updateGroupLabels();
+        }
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            if ($('#approveModal') && !$('#approveModal').classList.contains('hidden')) {
+                ApproveModal.close();
+            }
+            if ($('#userModal') && !$('#userModal').classList.contains('hidden')) {
+                UserModal.close();
+            }
+            if ($('#deleteModal') && !$('#deleteModal').classList.contains('hidden')) {
+                DeleteModal.close();
+            }
+        }
+    });
+
+    // ══════════════════════════════════════════════════════════
+    //  ИНИЦИАЛИЗАЦИЯ
+    // ══════════════════════════════════════════════════════════
+
+    document.addEventListener('DOMContentLoaded', function () {
+        initInitials();
+        ApproveModal.init();
+        ApproveModal.bindEvents();
+        UserModal.init();
+        DeleteModal.init();
+        TableFilter.init();
+        initPhoneMask();
+        initPartnerToggle();
+
+        const userForm = $('#userForm');
+        if (userForm) userForm.addEventListener('submit', (e) => UserModal.submit(e));
+
+        const deleteForm = $('#deleteForm');
+        if (deleteForm) deleteForm.addEventListener('submit', (e) => DeleteModal.submit(e));
+    });
 
 })();
