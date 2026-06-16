@@ -1,11 +1,12 @@
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.models import User, Group
 from django.db import transaction
 from django.db.models import Count
 from django.http import JsonResponse
 from django.urls import reverse_lazy
 from django.views import View
 from django.shortcuts import render, get_object_or_404
+from django.db import transaction as db_transaction
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.models import User, Group
 from django.views.generic import TemplateView, ListView, UpdateView, CreateView
 
 from .forms import AdminUserForm, EcoTaskForm
@@ -13,9 +14,13 @@ from .models import RegistrationRequest
 from .services import process_registration_approval, process_registration_rejection
 from ..accounts.models import Profile, Partner
 from ..accounts.permissions import RoleRequiredMixin
-from ..ecowallet.models import EcoWallet
+from ..ecowallet.models import EcoWallet, EcoTransactionType
 from ..ecowallet.services import EcoCoinService
 from ..marketplace.models import UserTaskCompletion, EcoTask
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class AdminDashBoardView(TemplateView):
@@ -267,41 +272,47 @@ class AdminCheckAiAntiFrodeEcoTasksView(TemplateView):
         return context
 
 
-class ReviewTaskActionView(RoleRequiredMixin, View):
-    """AJAX View для одобрения или отклонения"""
-    required_roles = ['Администраторы']
+class ReviewTaskActionView(LoginRequiredMixin, View):
+    """AJAX View для одобрения или отклонения задания модератором"""
 
-    @transaction.atomic
     def post(self, request, pk):
+        # Проверяем, что пользователь — админ или модератор
+        if not (request.user.is_staff or request.user.groups.filter(name='Администраторы').exists()):
+            return JsonResponse({'success': False, 'error': 'Нет прав'}, status=403)
+
         completion = get_object_or_404(UserTaskCompletion, pk=pk)
         action = request.POST.get('action')  # 'approve' или 'reject'
         comment = request.POST.get('comment', '')
 
+        # Если задание уже обработано, не даем сделать это дважды
         if completion.status in [UserTaskCompletion.Status.APPROVED, UserTaskCompletion.Status.CANCELLED]:
             return JsonResponse({'success': False, 'error': 'Задание уже обработано'}, status=400)
 
         if action == 'approve':
-            # Начисляем баллы через сервис
             try:
-                EcoCoinService.credit(
-                    user=completion.user,
-                    amount=completion.task.reward,
-                    tx_type='TASK_REWARD',
-                    external_id=f'task:{completion.id}'
-                )
-                completion.status = UserTaskCompletion.Status.APPROVED
-                completion.admin_comment = comment
-                completion.save()
-                return JsonResponse({'success': True, 'message': f'Одобрено. +{completion.task.reward} ECO'})
+                with db_transaction.atomic():
+                    # Начисляем баллы
+                    EcoCoinService.credit(
+                        user=completion.user,
+                        amount=completion.task.reward,
+                        tx_type=EcoTransactionType.TASK_COMPLETED,
+                        external_id=f"task:{completion.task_id}:user:{completion.user_id}"
+                    )
+                    completion.status = UserTaskCompletion.Status.APPROVED
+                    completion.admin_comment = comment
+                    completion.save(update_fields=['status', 'admin_comment', 'reviewed_at'])
+
+                return JsonResponse({'success': True, 'message': f'Одобрено! +{completion.task.reward} ECO начислено.'})
 
             except Exception as e:
+                logger.error(f"Error approving task {completion.pk}: {e}", exc_info=True)
                 return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
         elif action == 'reject':
             completion.status = UserTaskCompletion.Status.REJECTED
             completion.admin_comment = comment
-            completion.save()
-            return JsonResponse({'success': True, 'message': 'Отклонено'})
+            completion.save(update_fields=['status', 'admin_comment', 'reviewed_at'])
+            return JsonResponse({'success': True, 'message': 'Задание отклонено'})
 
         return JsonResponse({'success': False, 'error': 'Неизвестное действие'}, status=400)
 

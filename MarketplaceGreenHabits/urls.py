@@ -27,7 +27,7 @@ from apps.about.views import IndexView
 from apps.accounts.views import ProfileView, EditProfileView
 from apps.administrations.views import AdminDashBoardView, AdminUserManagementView, AdminAuthRequestsUsersView, \
     ModerateRequestView, AdminCheckEcoTasksView, AdminCheckAiAntiFrodeEcoTasksView, AdminEcoTasksManageView, \
-    AdminEcoTaskCreateView, AdminEcoTaskUpdateView, AdminEcoTaskDeleteView
+    AdminEcoTaskCreateView, AdminEcoTaskUpdateView, AdminEcoTaskDeleteView, ReviewTaskActionView
 from apps.marketplace.views import EcoTaskDetailsView, EcoTasksTrackerView, CompleteEcoTaskView, EcoBonusListView, \
     EditEcoBonusView, AddEcoBonusView
 from apps.system.views import NoAccessView
@@ -98,6 +98,7 @@ urlpatterns = [
     path('eco-tasks-tracker/', EcoTasksTrackerView.as_view(), name='eco_tasks_tracker'),
     path('eco-task-details/<int:pk>/', EcoTaskDetailsView.as_view(), name='eco_task_details'),
     path('eco-tasks/complete/<int:task_id>/', CompleteEcoTaskView.as_view(), name='eco_task_complete'),
+    path('admin/check/eco-tasks/<int:pk>/review/', ReviewTaskActionView.as_view(), name='review_task_action'),
 
     # --- ПРИВЫЧКИ ---
     path('eco-habits-tracker/', EcoHabitsTrackerView.as_view(), name='eco_habits_tracker'),
