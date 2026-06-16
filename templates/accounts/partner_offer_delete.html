@@ -1,0 +1,56 @@
+{% extends 'index/base_header.html' %}
+{% load static %}
+
+{% block title %}МЗП - Удаление предложения{% endblock %}
+
+{% block content_block_0 %}
+    <h1>МЗП -> Предложения -> Удаление</h1>
+{% endblock %}
+
+{% block content_block_1 %}
+    <div class="px-12 py-8 bg-gray-50">
+        <div class="max-w-lg mx-auto">
+            <div class="bg-white rounded-xl shadow-md p-8 text-center">
+                <div class="bg-red-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
+                    <i class="material-icons text-4xl text-red-500">warning</i>
+                </div>
+
+                <h2>Вы уверены?</h2>
+                <p class=" text-gray-600 text-sm mb-6">
+                    Вы собираетесь удалить предложение:
+                </p>
+
+                <!-- Блок с деталями (для наглядности) -->
+                <div class="bg-gray-50 rounded-xl p-6 mb-6 text-left border-l-4 border-red-500">
+                    <div class="mb-2">
+                        <span class="text-gray-500 text-xs block">Партнер:</span>
+                        <span class="font-bold text-gray-800 text-sm">{{ partner_name }}</span>
+                    </div>
+                    <div class="mb-2">
+                        <span class="text-gray-500 text-xs block">Предложение:</span>
+                        <span class="font-bold text-gray-800 text-sm">{{ object_name }}</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-500 text-xs block">Цена:</span>
+                        <span class="font-bold text-gray-800 text-sm">{{ object.price_in_eco }} ECO</span>
+                    </div>
+                </div>
+
+                <!-- Форма подтверждения -->
+                <form method="POST" novalidate>
+                    {% csrf_token %}
+                    <div class="flex justify-center gap-3 mt-6">
+                        <a href="{% url 'partner_offers' %}"
+                           class="px-6 py-2.5 rounded-xl font-semibold text-base border border-gray-300 text-gray-700 hover:bg-gray-50 transition">
+                            Отмена
+                        </a>
+                        <button type="submit"
+                                class="px-6 py-2.5 rounded-xl font-semibold text-base bg-red-500 text-white hover:bg-red-600 transition flex items-center">
+                            <i class="material-icons text-base mr-1">delete_forever</i> Да, удалить
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

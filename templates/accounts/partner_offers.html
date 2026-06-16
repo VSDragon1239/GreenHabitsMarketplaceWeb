@@ -1,0 +1,97 @@
+{% extends 'index/base_header.html' %}
+{% load static %}
+
+{% block title %}МЗП - Управление предложениями{% endblock %}
+
+{% block content_block_0 %}
+    <h1>МЗП -> <a href="{% url 'partner_dashboard' %}">Кабинет</a> -> Управление предложениями</h1>
+{% endblock %}
+
+{% block content_block_1 %}
+    <div class="px-12 py-8 bg-gray-50">
+
+        <!-- Панель действий -->
+        <div class="bg-white rounded-xl shadow-md p-6 mb-6 flex items-center justify-between">
+            <div>
+                <div class="flex items-center">
+                    <i class="material-icons text-2xl eco-green mr-3">inventory_2</i>
+                    <h3 class="text-xl font-bold text-gray-800">Мои предложения</h3>
+                </div>
+                <p class="text-gray-500 text-sm">Управляйте скидками, ценой в ECO-коинах и статусом активности.</p>
+            </div>
+            <a href="{% url 'partner_offer_create' %}"
+               class="gradient-green text-white px-6 py-2 rounded-xl font-semibold text-sm shadow-md hover:shadow-lg transition flex items-center">
+                <i class="material-icons text-sm mr-1">add</i> Создать новое
+            </a>
+        </div>
+
+        <!-- Сетка карточек -->
+        <div class="mb-6">
+            {% for offer in offers %}
+                <div class="bg-white rounded-xl shadow-md border-t-4 border-green-500 p-5 mb-4">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex-1">
+                            <div class="flex items-center mb-2">
+                                <div class="bg-green-100 rounded-full w-12 h-12 flex items-center justify-center mr-3 flex-shrink-0">
+                                    <i class="material-icons text-2xl eco-green">{{ offer.partner.icon }}</i>
+                                </div>
+                                <div>
+                                    <h4 class="text-lg font-bold text-gray-800">{{ offer.title }}</h4>
+                                    <p class="text-gray-500 text-sm truncate">{{ offer.description|truncatewords:12 }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Бейдж статуса -->
+                        {% if offer.is_active %}
+                            <span class="bg-green-100 text-green-700 text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap">Активно</span>
+                        {% else %}
+                            <span class="bg-red-100 text-red-700 text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap">Отключено</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Цена и кнопки -->
+                    <div class="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
+                        <div class="flex items-center bg-green-50 rounded-lg px-4 py-2">
+                            <span class="text-gray-600 text-xs mr-2">Цена:</span>
+                            <span class="text-2xl font-bold eco-green">{{ offer.price_in_eco }}</span>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <a href="{% url 'partner_offer_edit' offer.id %}"
+                               class="text-blue-600 hover:text-blue-800 text-sm font-semibold px-3 py-2 border border-blue-200 rounded-lg hover:bg-blue-50 transition">
+                                <i class="material-icons text-base mr-1">edit</i> Редактировать
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="bg-white rounded-xl shadow-md p-10 text-center">
+                    <i class="material-icons text-6xl text-gray-300 mb-3">storefront</i>
+                    <h3 class="text-xl font-bold text-gray-500 mb-2">Пока нет предложений</h3>
+                    <p class="text-gray-400 text-sm mb-4">Создайте первое предложение, чтобы оно появилось в
+                        маркетплейсе.</p>
+                    <a href="{% url 'partner_offer_create' %}"
+                       class="text-green-600 hover:text-green-700 font-semibold text-sm hover:underline">
+                        Создать первое предложение →
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Подсказка -->
+        <div class="bg-white rounded-xl shadow-md p-5 mt-6 border-l-4 border-blue-500">
+            <div class="flex items-start">
+                <i class="material-icons text-2xl text-blue-500 mr-3">info</i>
+                <div>
+                    <h4 class="font-bold text-gray-800 text-sm">Как это работает?</h4>
+                    <p class="text-gray-600 text-sm">
+                        Студенты покупают ваши предложения за ECO-коины. Вы получаете "Использовано" баллы в статистике.
+                        Кнопка "Редактировать" ведет в стандартную админку, где вы можете изменить цену, описание или
+                        временно отключить акцию.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

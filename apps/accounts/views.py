@@ -1,17 +1,20 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Max
-from django.shortcuts import render, redirect
+from django.core.exceptions import PermissionDenied
+from django.db.models import Max, Count
+from django.http import Http404
+from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse_lazy
 from django.views import View
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, UpdateView, DeleteView, CreateView, ListView
 from django.db import transaction as db_transaction
 from django.contrib import messages
 
-from apps.accounts.forms import UserEditForm, ProfileAvatarForm
+from apps.accounts.forms import UserEditForm, ProfileAvatarForm, OfferCreateForm
 from apps.accounts.models import Profile
 from apps.accounts.permissions import RoleRequiredMixin
 from apps.ecowallet.models import EcoCoinTransaction
 from apps.ecowallet.services import EcoCoinService
-from apps.marketplace.models import UserTaskCompletion
+from apps.marketplace.models import UserTaskCompletion, Offer, UserPromoCode
 from apps.trackers.models import UserHabitLog
 
 from django.db.models import Sum, Max
@@ -119,3 +122,148 @@ class EditProfileView(LoginRequiredMixin, View):
             'p_form': p_form,
         }
         return render(request, 'accounts/profile_edit.html', context)
+
+
+class PartnerDashboardView(RoleRequiredMixin, TemplateView):
+    template_name = "accounts/partner_dashboard.html"
+    required_roles = ['Партнеры']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # БЕЗОПАСНОЕ получение партнера (если админ добавил в группу, но не привязал бизнес)
+        partner = getattr(self.request.user, 'managed_partner', None)
+
+        # Если партнер не привязан, показываем заглушку
+        if not partner:
+            context['setup_required'] = True
+            return context
+
+        # Агрегация статистики по офферам текущего партнера
+        offers_stats = UserPromoCode.objects.filter(offer__partner=partner).aggregate(
+            total_issued=Count('id'),
+            total_used=Count('id', filter=Q(is_used=True))
+        )
+
+        # Считаем уникальных клиентов (у которых есть хотя бы 1 не использованный промокод)
+        active_clients = UserPromoCode.objects.filter(
+            offer__partner=partner,
+            is_used=False
+        ).values('user').distinct().count()
+
+        context['partner'] = partner
+        context['total_issued'] = offers_stats['total_issued'] or 0
+        context['total_used'] = offers_stats['total_used'] or 0
+        context['active_clients'] = active_clients
+
+        # Последние 3 промокода для отображения на дашборде
+        context['recent_promos'] = Offer.objects.filter(partner=partner).order_by('-id')[:3]
+
+        return context
+
+
+class PartnerOfferListView(RoleRequiredMixin, ListView):
+    template_name = "accounts/partner_offers.html"
+    required_roles = ['Партнеры']
+    context_object_name = 'offers'
+
+    def get_queryset(self):
+        # Используем безопасное получение
+        partner = getattr(self.request.user, 'managed_partner', None)
+        if not partner:
+            # Если партнер не привязан, возвращаем пустой queryset
+            return Offer.objects.none()
+        return Offer.objects.filter(partner=partner).order_by('-id')
+
+
+class PartnerOfferCreateView(RoleRequiredMixin, CreateView):
+    template_name = "accounts/partner_create_offer.html"
+    required_roles = ['Партнеры']
+    form_class = OfferCreateForm
+    model = Offer
+    success_url = reverse_lazy('partner_offers')
+
+    def form_valid(self, form):
+        partner = getattr(self.request.user, 'managed_partner', None)
+        if not partner:
+            messages.error(self.request, "Ваш аккаунт не привязан к профилю партнера. Обратитесь к администратору.")
+            return redirect('no-access')
+
+        form.instance.partner = partner
+        form.instance.is_active = True
+        messages.success(self.request, "Предложение успешно создано!")
+        return super().form_valid(form)
+
+
+class PartnerOfferUpdateView(RoleRequiredMixin, UpdateView):
+    template_name = "accounts/partner_offer_edit.html"
+    required_roles = ['Партнеры']
+    form_class = OfferCreateForm
+    model = Offer
+
+    # Переопределяем URL, так как нам нужно передать pk в URL
+    def get_success_url(self):
+        return reverse_lazy('partner_offers')
+
+    def get_object(self, queryset=None):
+        # Находим оффер по ID из URL
+        offer = get_object_or_404(Offer, pk=self.kwargs.get('pk'))
+
+        # БЕЗОПАСНОСТЬ: Проверяем, что этот оффер принадлежит текущему партнеру
+        if offer.partner != self.request.user.managed_partner:
+            # Если попытка взломать URL напрямую, кидаем на 403 (No-access)
+            raise PermissionDenied("Вы можете редактировать только свои предложения")
+
+        return offer
+
+    def form_valid(self, form):
+        # На случай, если кто-то подделает HTML-форму и попытается отправить чужой ID
+        form.instance.partner = self.request.user.managed_partner
+        messages.success(self.request, "Предложение успешно обновлено!")
+        return super().form_valid(form)
+
+
+class PartnerOfferDeleteView(RoleRequiredMixin, DeleteView):
+    template_name = "accounts/partner_offer_delete.html"
+    model = Offer  # Наследуем от UpdateView, чтобы получить доступ к объекту
+    context_object_name = 'offer'
+
+    def get_success_url(self):
+        return reverse_lazy('partner_offers')
+
+    def get_object(self, queryset=None):
+        offer = get_object_or_404(Offer, pk=self.kwargs.get('pk'))
+
+        if offer.partner != self.request.user.managed_partner:
+            raise Http404("Объект не найден")
+        return offer
+
+    def delete(self, request, *args, **kwargs):
+        # Доп. проверка через Post (на случай прямого вызова POST)
+        self.object = self.get_object()
+        partner = self.object.partner
+
+        # Формируем сообщение для шаблона
+        self.extra_context = {
+            'object_name': self.object.title,
+            'partner_name': partner.name
+        }
+
+        return super().delete(request, *args, **kwargs)
+
+
+# apps/accounts/views.py
+from django.contrib.auth.views import LoginView
+from django.urls import reverse_lazy
+
+
+class PartnerLoginView(LoginView):
+    """Кастомный логин, который редиректит партнёров сразу на их дашборд"""
+
+    def get_success_url(self):
+        user = self.request.user
+        # Проверяем, состоит ли пользователь в группе "Партнеры"
+        if user.is_authenticated and user.groups.filter(name='Партнеры').exists():
+            return reverse_lazy('partner_dashboard')
+        # Остальные идут на главную страницу (или куда укажешь)
+        return reverse_lazy('profile')

@@ -64,3 +64,45 @@ class UserEditForm(forms.ModelForm):
             'email': forms.EmailInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg text-base focus:outline-none focus:border-green-500'}),
         }
+
+
+class OfferCreateForm(forms.ModelForm):
+    class Meta:
+        model = Offer
+        fields = ['title', 'description', 'price_in_eco', 'category']
+        widgets = {
+            'title': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg text-base focus:outline-none focus:border-green-500'}),
+            'description': forms.Textarea(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg text-base focus:outline-none focus:border-green-500',
+                'rows': 3}),
+            'price_in_eco': forms.NumberInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg text-base focus:outline-none focus:border-green-500'}),
+            'category': forms.Select(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg text-base focus:outline-none focus:border-green-500'}),
+        }
+
+
+class PartnerUserCreationForm(forms.ModelForm):
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'vTextField', 'autocomplete': 'new-password'}),
+        label="Пароль"
+    )
+
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password']  # Только нужные поля
+
+    def clean_password(self):
+        password = self.cleaned_data.get("password")
+        if len(password) < 8:
+            raise forms.ValidationError("Пароль должен быть не менее 8 символов.")
+        return password
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        password = self.cleaned_data["password"]
+        user.set_password(password)
+        if commit:
+            user.save()
+        return user

@@ -25,12 +25,14 @@ class EcoWallet(models.Model):
 
 class EcoTransactionType(models.TextChoices):
     # Начисления
+
     PROJECT_CREATED = "project_created", "Создание проекта"
     BLOG_PUBLISHED = "blog_published", "Публикация статьи"
     DAILY_BONUS = "daily_bonus", "Ежедневный бонус"
     MANUAL_REWARD = "manual_reward", "Ручное начисление (админом)"
     # Списания
-    SHOP_PURCHASE = "shop_purchase", "Покупка в магазине"
+    MARKETPLACE_PURCHASE = 'marketplace_purchase', 'Покупка на маркетплейсе'
+    # SHOP_PURCHASE = "shop_purchase", "Покупка в магазине"
     TASK_REVERSED = "task_reversed", "Отмена эко-задачи (списание)"
     # Переводы
     TRANSFER_OUT = "transfer_out", "Перевод другому"

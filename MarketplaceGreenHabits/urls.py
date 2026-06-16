@@ -24,13 +24,14 @@ from django.conf.urls.static import static
 from django.views.generic import RedirectView
 
 from apps.about.views import IndexView
-from apps.accounts.views import ProfileView, EditProfileView
+from apps.accounts.views import ProfileView, EditProfileView, PartnerDashboardView, PartnerOfferListView, \
+    PartnerOfferCreateView, PartnerOfferUpdateView, PartnerOfferDeleteView, PartnerLoginView
 from apps.administrations.views import AdminDashBoardView, AdminUserManagementView, AdminAuthRequestsUsersView, \
     ModerateRequestView, AdminCheckEcoTasksView, AdminCheckAiAntiFrodeEcoTasksView, AdminEcoTasksManageView, \
     AdminEcoTaskCreateView, AdminEcoTaskUpdateView, AdminEcoTaskDeleteView, ReviewTaskActionView, \
     AdminRunAIModerationView
 from apps.marketplace.views import EcoTaskDetailsView, EcoTasksTrackerView, CompleteEcoTaskView, EcoBonusListView, \
-    EditEcoBonusView, AddEcoBonusView
+    EditEcoBonusView, AddEcoBonusView, MarketplaceView, ExchangeOfferView
 from apps.system.views import NoAccessView
 from apps.trackers.views import EcoHabitsTrackerView, EcoHabitsCategoriesView, EcoHabitsView, EcoHabitDetailsView, \
     LogEcoHabitView
@@ -41,7 +42,7 @@ urlpatterns = [
     path('', IndexView.as_view(), name="main"),
     path(
         'login/',
-        LoginView.as_view(
+        PartnerLoginView.as_view(
             template_name="accounts/auth.html",
             redirect_authenticated_user=True,
             next_page="/profile/",
@@ -92,8 +93,9 @@ urlpatterns = [
     #                      Маркетплейс
     # ============================================================
 
-    path('marketplace/', IndexView.as_view(), name="marketplace"),
-    # path('marketplace/exchange/<int:pk>/', ExchangeOfferView.as_view(), name='marketplace_exchange'),
+    # Заменяем старый плейсхолдер маркетплейса на эти две строки:
+    path('marketplace/', MarketplaceView.as_view(), name="marketplace"),
+    path('marketplace/exchange/<int:pk>/', ExchangeOfferView.as_view(), name='marketplace_exchange'),
     path('moderation/tasks/<int:pk>/ai-run/', AdminRunAIModerationView.as_view(), name='admin_run_ai_moderation'),
 
     # --- ЗАДАЧИ ---
@@ -117,6 +119,11 @@ urlpatterns = [
     # ============================================================
     #                      Спонсоры
     # ============================================================
+    path('partner/dashboard/', PartnerDashboardView.as_view(), name='partner_dashboard'),
+    path('partner/offers/', PartnerOfferListView.as_view(), name='partner_offers'),
+    path('partner/offers/create/', PartnerOfferCreateView.as_view(), name='partner_offer_create'),
+    path('partner/offers/<int:pk>/edit/', PartnerOfferUpdateView.as_view(), name='partner_offer_edit'),
+    path('partner/offer/<int:pk>/delete/', PartnerOfferDeleteView.as_view(), name='partner_offer_delete'),
 ]
 
 if settings.DEBUG:

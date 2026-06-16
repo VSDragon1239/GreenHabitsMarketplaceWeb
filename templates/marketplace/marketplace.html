@@ -1,0 +1,96 @@
+{% extends 'index/base_header.html' %}
+{% load static %}
+
+{% block title %}Маркетплейс бонусов{% endblock %}
+
+{% block extra_css %}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+{% endblock %}
+
+{% block content_block_1 %}
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Маркетплейс бонусов</h1>
+
+        <!-- Сетка офферов -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            {% for offer in offers %}
+                <div class="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 flex flex-col">
+                    <div class="p-6 flex-grow">
+                        <div class="flex items-center mb-3">
+                            <span class="bg-green-100 text-green-700 text-xs font-semibold px-2.5 py-1 rounded-full">{{ offer.get_category_display }}</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">{{ offer.title }}</h3>
+                        <p class="text-gray-500 text-sm mb-4">{{ offer.description|truncatewords:20 }}</p>
+                    </div>
+                    <div class="px-6 py-4 bg-gray-50 border-t flex items-center justify-between">
+                        <div class="text-2xl font-bold eco-green flex items-center">
+                            {{ offer.price_in_eco }}
+                            <span class="text-sm font-medium text-gray-500 ml-1">ECO</span>
+                        </div>
+                        <button onclick="buyOffer({{ offer.id }}, {{ offer.price_in_eco }})"
+                                class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold text-sm transition">
+                            Обменять
+                        </button>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-span-3 text-center text-gray-400 py-12">
+                    Партнёры пока не добавили предложений.
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Мои промокоды -->
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">Мои промокоды</h2>
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {% for promo in user_promocodes %}
+                    <div class="border-l-4 {% if promo.is_used %}border-gray-300 opacity-60{% else %}border-green-500{% endif %} bg-gray-50 p-4 rounded-r-lg flex justify-between items-center">
+                        <div>
+                            <div class="text-xs text-gray-500">{{ promo.offer.partner.name }}
+                                — {{ promo.offer.title }}</div>
+                            <div class="text-xl font-mono font-bold text-gray-800 tracking-wider">{{ promo.code }}</div>
+                        </div>
+                        {% if promo.is_used %}
+                            <span class="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">Использован</span>
+                        {% else %}
+                            <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Активен</span>
+                        {% endif %}
+                    </div>
+                {% empty %}
+                    <p class="text-gray-400 col-span-2 text-center py-4">У вас пока нет промокодов.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function buyOffer(id, price) {
+            if (!confirm(`Вы уверены, что хотите обменять ${price} ECO на этот бонус?`)) return;
+
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            try {
+                const response = await fetch(`/marketplace/exchange/${id}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(`Успех! Ваш промокод: ${data.promo_code}`);
+                    location.reload(); // Перезагружаем, чтобы показать новый код
+                } else {
+                    alert('Ошибка: ' + (data.error || 'Недостаточно баллов'));
+                }
+            } catch (e) {
+                alert('Сетевая ошибка: ' + e.message);
+            }
+        }
+    </script>
+{% endblock %}

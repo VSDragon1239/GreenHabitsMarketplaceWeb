@@ -163,3 +163,66 @@ class AddEcoBonusView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         return context
+
+
+import uuid
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import JsonResponse
+from django.views import View
+from django.views.generic import TemplateView
+from django.shortcuts import get_object_or_404
+
+from apps.ecowallet.services import EcoCoinService
+from apps.ecowallet.models import EcoTransactionType
+from apps.marketplace.models import Offer, UserPromoCode
+
+
+class MarketplaceView(LoginRequiredMixin, TemplateView):
+    """Главная страница маркетплейса"""
+    template_name = "marketplace/marketplace.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Получаем все активные предложения
+        context['offers'] = Offer.objects.filter(is_active=True).select_related('partner')
+        # Получаем промокоды текущего пользователя
+        context['user_promocodes'] = UserPromoCode.objects.filter(
+            user=self.request.user
+        ).select_related('offer', 'offer__partner').order_by('-created_at')
+        return context
+
+
+class ExchangeOfferView(LoginRequiredMixin, View):
+    """AJAX View для обмена ECO на промокод"""
+
+    def post(self, request, pk):
+        offer = get_object_or_404(Offer, pk=pk, is_active=True)
+        user = request.user
+
+        # 1. Пытаемся списать баллы (EcoCoinService.debit кинет ошибку, если баллов не хватает)
+        try:
+            EcoCoinService.debit(
+                user=user,
+                amount=offer.price_in_eco,
+                tx_type=EcoTransactionType.MARKETPLACE_PURCHASE,  # Убедись, что такой тип есть в моделях!
+                external_id=f"offer:{offer.id}:user:{user.id}"
+            )
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)}, status=400)
+
+        # 2. Генерируем уникальный промокод
+        promo_code = f"ECO-{uuid.uuid4().hex[:8].upper()}"
+
+        # 3. Создаём запись в БД
+        UserPromoCode.objects.create(
+            user=user,
+            offer=offer,
+            code=promo_code
+        )
+
+        # 4. Возвращаем успех и новый баланс
+        return JsonResponse({
+            "success": True,
+            "promo_code": promo_code,
+            "new_balance": str(EcoCoinService.get_balance(user))
+        })

@@ -1,0 +1,68 @@
+{% extends 'index/base_header.html' %}
+{% load static %}
+
+{% block title %}МЗП - Редактирование предложения{% endblock %}
+
+{% block content_block_0 %}
+    <h1>МЗП -> <a href="{% url 'partner_dashboard' %}">Кабинет</a> -> <a
+            href="{% url 'partner_offers' %}">Предложения</a> -> Редактирование</h1>
+{% endblock %}
+
+{% block content_block_1 %}
+    <div class="px-12 py-8 bg-gray-50">
+        <div class="max-w-2xl mx-auto">
+
+            <!-- Заголовок -->
+            <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+                <div class="flex items-center mb-2">
+                    <i class="material-icons text-2xl eco-green mr-3">edit</i>
+                    <h2 class="text-2xl font-bold text-gray-800">Редактирование</h2>
+                </div>
+            </div>
+
+            <!-- Сама форма (as_p для безопасного рендеринга) -->
+            <div class="bg-white rounded-xl shadow-md p-8">
+                <form method="POST" novalidate>
+                    {% csrf_token %}
+                    {{ form.as_p }}
+
+                    <div class="flex items-center justify-between mt-8">
+                        <!-- Ссылка "К списку" -->
+                        <a href="{% url 'partner_offers' %}"
+                           class="text-gray-600 hover:text-gray-800 font-semibold text-base transition inline-flex items-center gap-2 py-3">
+                            <i class="material-icons text-xl">arrow_back</i>
+                            <span>К списку</span>
+                        </a>
+
+                        <!-- Кнопка "Сохранить" -->
+                        <button type="submit"
+                                class="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-xl font-bold text-base shadow-md hover:shadow-lg transition inline-flex items-center gap-2">
+                            <i class="material-icons text-xl">save</i>
+                            <span>Сохранить</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Кнопка удаления (JS без перезагрузки) -->
+            <div class="bg-white rounded-xl shadow-md p-5 mt-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center text-red-600">
+                        <i class="material-icons text-xl mr-2">delete_forever</i>
+                        <div>
+                            <div class="font-semibold text-base">Удалить предложение</div>
+                            <div class="text-gray-500 text-sm">Операция необратима. Студенты потеряют доступ к этому
+                                промокоду.
+                            </div>
+                        </div>
+                    </div>
+                    <a href="{% url 'partner_offer_delete' offer.id %}"
+                       class="text-red-600 hover:text-red-800 font-semibold text-sm px-4 py-2 border border-red-200 rounded-lg hover:bg-red-50 transition inline-flex items-center gap-2">
+                        <i class="material-icons text-base">delete</i>
+                        <span>Удалить</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,177 @@
+{% extends 'index/base_header.html' %}
+{% load static %}
+
+{% block title %}Партнерский кабинет - МЗП{% endblock %}
+
+{% block extra_css %}
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        .bar-chart-bar {
+            transition: height 0.6s ease;
+        }
+
+        .promo-card {
+            transition: all 0.3s ease;
+        }
+
+        .promo-card:hover {
+            transform: translatey(-2px);
+            box-shadow: 0 10px 20px rgba(46, 125, 50, 0.15);
+        }
+    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+{% endblock %}
+
+{% block content_block_0 %}
+    <h1>МЗП -> Партнерский кабинет</h1>
+{% endblock %}
+
+{% block content_block_1 %}
+    <div class="px-12 py-8 bg-gray-50">
+        {% if setup_required %}
+            <div class="bg-white rounded-xl shadow-md p-8 text-center max-w-lg mx-auto mt-20">
+                <i class="material-icons text-6xl text-gray-300 mb-4">storefront</i>
+                <h2 class="text-2xl font-bold text-gray-700 mb-2">Профиль не настроен</h2>
+                <p class="text-gray-500 mb-4">Ваш аккаунт добавлен в группу "Партнеры", но администратор еще не привязал
+                    к
+                    вам бизнес-профиль.</p>
+                <p class="text-gray-400 text-sm mb-6">Свяжитесь с администратором для завершения настройки.</p>
+            </div>
+        {% else %}
+
+            <!-- Partner Info Card -->
+            <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow-lg p-6 mb-6 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="flex items-center mb-2">
+                            <i class="material-icons text-3xl mr-3">{{ partner.icon }}</i>
+                            <h2 class="text-3xl font-bold">{{ partner.name }}</h2>
+                        </div>
+                        <p class="text-green-100 text-sm">Партнер с {{ joined_at|date:"d.m.Y" }}</p>
+                    </div>
+                    <div class="text-right">
+                        <div class="bg-white bg-opacity-20 rounded-xl p-3">
+                            <i class="material-icons text-4xl">store</i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Partner Statistics -->
+                <div class="grid grid-cols-4 gap-3 mb-6">
+                    <div class="bg-white rounded-xl shadow-md p-4 text-center">
+                        <div class="text-gray-500 text-xs mb-1">Всего выдано</div>
+                        <div class="text-3xl font-bold eco-green">{{ total_issued }}</div>
+                        <div class="text-gray-500 text-xs">промокодов</div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-md p-4 text-center">
+                        <div class="text-gray-500 text-xs mb-1">Использовано</div>
+                        <div class="text-3xl font-bold text-blue-600">{{ total_used }}</div>
+                        <div class="text-gray-500 text-xs">{% widthratio total_used total_issued 100 %}%</div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-md p-4 text-center">
+                        <div class="text-gray-500 text-xs mb-1">Активных</div>
+                        <div class="text-3xl font-bold text-purple-600">{{ active_clients }}</div>
+                        <div class="text-gray-500 text-xs">клиентов</div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-md p-4 text-center">
+                        <div class="text-gray-500 text-xs mb-1">Получено баллов</div>
+                        <div class="text-3xl font-bold text-yellow-600">ECO</div>
+                        <div class="text-gray-500 text-xs">от пользователей</div>
+                    </div>
+                </div>
+
+                <!-- Promo Codes Management -->
+                <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-bold text-gray-800">Промокоды</h3>
+                        <a href="{% url 'partner_offer_create' %}"
+                           class="gradient-green text-white px-4 py-2 rounded-lg font-semibold text-sm hover:shadow-lg transition flex items-center">
+                            <i class="material-icons text-sm mr-1">add</i> Создать промокод
+                        </a>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-3">
+                        {% for offer in recent_promos %}
+                            <div class="promo-card bg-green-50 rounded-lg p-4 border-l-4 border-green-500">
+                                <div class="flex items-center justify-between mb-2">
+                                    <h4 class="text-lg font-bold text-gray-800 truncate mr-2">{{ offer.title }}</h4>
+                                    <span class="bg-green-200 px-2 py-1 rounded text-xs font-semibold eco-green whitespace-nowrap">{{ offer.price_in_eco }} ECO</span>
+                                </div>
+                                <p class="text-gray-600 text-sm mb-2 truncate">{{ offer.description }}</p>
+                                <a href="{% url 'partner_offers' %}" class="text-xs text-green-600 hover:underline">Подробнее
+                                    →</a>
+                            </div>
+                        {% empty %}
+                            <div class="col-span-3 text-center text-gray-400 py-8">
+                                <p>У вас пока нет предложений.</p>
+                                <a href="{% url 'partner_offer_create' %}"
+                                   class="text-green-600 font-semibold hover:underline">Создать первое</a>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Analytics Chart (Статичный плейсхолдер) -->
+                <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-bold text-gray-800">Аналитика</h3>
+                        <span class="text-gray-600 text-sm">График использования за месяц</span>
+                    </div>
+                    <div class="flex items-end justify-between min-h-[180px] mb-4">
+                        <!-- Статичные полоски (заменяются библиотекой типа Chart.js при необходимости) -->
+                        <div class="flex flex-col items-center flex-1">
+                            <div class="gradient-green rounded-t-lg w-8 bar-chart-bar" style="height: 80px"></div>
+                            <div class="text-gray-600 text-xs mt-2">1 нед</div>
+                        </div>
+                        <div class="flex flex-col items-center flex-1">
+                            <div class="gradient-green rounded-t-lg w-8 bar-chart-bar" style="height: 110px"></div>
+                            <div class="text-gray-600 text-xs mt-2">2 нед</div>
+                        </div>
+                        <div class="flex flex-col items-center flex-1">
+                            <div class="gradient-green rounded-t-lg w-8 bar-chart-bar" style="height: 140px"></div>
+                            <div class="text-gray-600 text-xs mt-2">3 нед</div>
+                        </div>
+                        <div class="flex flex-col items-center flex-1">
+                            <div class="gradient-green rounded-t-lg w-8 bar-chart-bar" style="height: 120px"></div>
+                            <div class="text-gray-600 text-xs mt-2">4 нед</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between text-sm text-gray-600 border-t border-gray-200 pt-3">
+                        <span>Всего использовано:</span>
+                        <span class="font-bold eco-green">{{ total_used }} промокодов</span>
+                    </div>
+                </div>
+
+                <!-- Bottom Grid -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-white rounded-xl shadow-md p-5">
+                        <div class="flex items-center mb-4">
+                            <i class="material-icons text-2xl eco-green mr-2">star</i>
+                            <h3 class="text-lg font-bold text-gray-800">Топ промокодов</h3>
+                        </div>
+                        <div class="space-y-3 text-sm">
+                            <p class="text-gray-400 text-center py-4">Данные формируются на основе аналитики</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-md p-5">
+                        <div class="flex items-center mb-4">
+                            <i class="material-icons text-2xl eco-green mr-2">settings</i>
+                            <h3 class="text-lg font-bold text-gray-800">Настройки</h3>
+                        </div>
+                        <div class="space-y-2">
+                            <a href="{% url 'partner_offers' %}"
+                               class="w-full text-left px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition text-sm flex items-center">
+                                <i class="material-icons text-base mr-2">inventory_2</i> Управление офферами
+                            </a>
+                            <a href="{% url 'profile_edit' %}"
+                               class="w-full text-left px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition text-sm flex items-center">
+                                <i class="material-icons text-base mr-2">edit</i> Редактировать профиль
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+        {% endif %}
+{% endblock %}

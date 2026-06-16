@@ -1,0 +1,75 @@
+{% extends 'index/base_header.html' %}
+{% load static %}
+
+{% block title %}МЗП - Создание предложения{% endblock %}
+
+{% block extra_css %}
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+{% endblock %}
+
+{% block content_block_0 %}
+    <h1>МЗП -> <a href="{% url 'partner_dashboard' %}">Партнерский кабинет</a> -> Предложения -> Создание</h1>
+{% endblock %}
+
+{% block content_block_1 %}
+    <div class="px-12 py-8 bg-gray-50">
+        <div class="max-w-2xl mx-auto">
+
+            <!-- Заголовок -->
+            <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+                <div class="flex items-center mb-2">
+                    <i class="material-icons text-2xl eco-green mr-3">add_circle</i>
+                    <h2 class="text-2xl font-bold text-gray-800">Новое предложение</h2>
+                </div>
+                <p class="text-gray-500 text-sm mb-4">Заполните данные, чтобы оно появилось в маркетплейсе у
+                    студентов.</p>
+            </div>
+
+            <!-- Сама форма -->
+            <div class="bg-white rounded-xl shadow-md p-8">
+                <form method="POST" novalidate>
+                    {% csrf_token %}
+
+                    <div class="mb-5">
+                        <label class="text-gray-700 text-sm font-medium mb-2 block">Название предложения <span
+                                class="text-red-500">*</span></label>
+                        {{ form.title }}
+                        <p class="text-gray-400 text-xs mt-1">Краткое название, например: "Скидка 10% на обеды"</p>
+                    </div>
+
+                    <div class="mb-5">
+                        <label class="text-gray-700 text-sm font-medium mb-2 block">Подробное описание <span
+                                class="text-red-500">*</span></label>
+                        {{ form.description }}
+                        <p class="text-gray-400 text-xs mt-1">Подробные условия акции (что именно входит в скидку,
+                            ограничения)</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 mb-5">
+                        <div>
+                            <label class="text-gray-700 text-sm font-medium mb-2 block">Категория</label>
+                            {{ form.category }}
+                        </div>
+                        <div>
+                            <label class="text-gray-700 text-sm font-medium mb-2 block">Стоимость (в ECO)</label>
+                            {{ form.price_in_eco }}
+                            <p class="text-gray-400 text-xs mt-1">Указывайте целое число (например, 500). Студент будет
+                                списывать эту сумму с баланса.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between mt-8">
+                        <a href="{% url 'partner_offers' %}"
+                           class="text-gray-600 hover:text-gray-800 font-medium text-sm">
+                            <i class="material-icons text-base mr-1">arrow_back</i> К списку предложений
+                        </a>
+                        <button type="submit"
+                                class="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-xl font-bold text-base shadow-md hover:shadow-lg transition flex items-center">
+                            <i class="material-icons mr-2">save</i> Сохранить
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
