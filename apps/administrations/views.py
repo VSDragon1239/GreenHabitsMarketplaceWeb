@@ -363,3 +363,31 @@ class AdminEcoTaskDeleteView(RoleRequiredMixin, View):
         task = get_object_or_404(EcoTask, pk=pk)
         task.delete()
         return JsonResponse({"success": True, "message": "Задание удалено"})
+
+
+from apps.marketplace.ai_moderation import moderate_task_completion, apply_ai_verdict
+
+
+class AdminRunAIModerationView(RoleRequiredMixin, View):
+    """AJAX View для запуска ИИ-проверки одного задания"""
+    required_roles = ['Администраторы']
+
+    def post(self, request, pk):
+        completion = get_object_or_404(UserTaskCompletion, pk=pk)
+
+        # Проверяем, что задание ещё не одобрено/отклонено окончательно
+        if completion.status in [UserTaskCompletion.Status.APPROVED, UserTaskCompletion.Status.REJECTED,
+                                 UserTaskCompletion.Status.CANCELLED]:
+            return JsonResponse({'success': False, 'error': 'Задание уже обработано окончательно'}, status=400)
+
+        # Запускаем ИИ
+        verdict = moderate_task_completion(completion)
+
+        # Применяем вердикт к БД
+        apply_ai_verdict(completion, verdict)
+
+        return JsonResponse({
+            'success': True,
+            'new_status': completion.get_status_display(),
+            'ai_feedback': completion.ai_feedback
+        })
