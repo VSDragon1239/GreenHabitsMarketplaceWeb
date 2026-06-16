@@ -101,9 +101,21 @@ class AdminUserManagementView(RoleRequiredMixin, View):
     template_name = 'administrations/admin_users_management.html'
 
     def get(self, request):
-        # Оптимизированный запрос: подтягиваем профиль, кошелек и группы одним запросом
         users = User.objects.select_related('profile', 'eco_wallet').prefetch_related('groups').all()
-        return render(request, self.template_name, {'users': users})
+
+        context = {
+            'users': users,
+            'all_groups': Group.objects.all(),
+            'registration_requests': RegistrationRequest.objects.filter(
+                status='new'
+            ).select_related() if hasattr(self, '_get_requests') else [],
+        }
+        return render(request, self.template_name, context)
+
+    # def get_context_data(self, **kwargs):
+    #     context = super().get_context_data(**kwargs)
+    #     context['all_groups'] = Group.objects.all()
+    #     return context
 
     def post(self, request):
         action = request.POST.get('action')
