@@ -58,7 +58,7 @@ class ProfileView(LoginRequiredMixin, RoleRequiredMixin, TemplateView):
         # Выполненные задания (если нужны где-то еще)
         context['completed_tasks'] = UserTaskCompletion.objects.filter(
             user=user
-        ).select_related('task').order_by('-completed_at')
+        ).select_related('task').order_by('reviewed_at')
 
         # Роли
         roles_priority = {
