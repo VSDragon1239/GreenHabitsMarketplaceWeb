@@ -47,6 +47,7 @@ CSRF_TRUSTED_ORIGINS = [
     'http://10.23.120.101',
     'https://greenhabits.site',
     'https://www.greenhabits.site',
+    'https://greenhabits.site:8443',
 ]
 
 # Application definition
