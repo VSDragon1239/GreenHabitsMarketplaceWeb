@@ -19,7 +19,7 @@
 {% block content_block_1 %}
     <div class="px-12 py-8 bg-gray-50">
 
-        <!-- Overall Statistics (ДИНАМИЧЕСКАЯ ПЛАШКА) -->
+        <!-- Overall Statistics -->
         <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-2xl shadow-lg p-6 mb-6 text-white">
             <div class="flex items-center justify-between mb-4">
                 <div>
@@ -42,14 +42,53 @@
             </div>
         </div>
 
-        <!-- Active Tasks (СПИСОК ИЗ БД) -->
+        <!-- Pending Tasks (На модерации) -->
+        {% if pending_tasks %}
+            <div class="mb-6">
+                <div class="flex items-center mb-4">
+                    <i class="material-icons text-2xl text-yellow-500 mr-2">hourglass_top</i>
+                    <h3 class="text-2xl font-bold text-gray-800">Задания на проверке</h3>
+                    <span class="ml-auto text-gray-600 text-sm">{{ pending_tasks|length }} шт.</span>
+                </div>
+                <div class="space-y-3">
+                    {% for comp in pending_tasks %}
+                        <a href="{% url 'eco_task_details' comp.task.id %}" class="block">
+                            <div class="task-card bg-yellow-50 rounded-xl shadow-md p-5 border-l-4 border-yellow-400 hover:shadow-lg transition-shadow">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center flex-1">
+                                        <div class="bg-yellow-100 rounded-full w-12 h-12 flex items-center justify-center mr-4 flex-shrink-0">
+                                            <i class="material-icons text-2xl text-yellow-600">pending_actions</i>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-lg font-bold text-gray-800">{{ comp.task.title }}</h4>
+                                            <p class="text-gray-500 text-sm">
+                                                {% if comp.status == 'ai_rejected' %}
+                                                    ⚠️ ИИ отклонил, ждет ручной проверки
+                                                {% else %}
+                                                    Ожидает проверки модератором
+                                                {% endif %}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right ml-4 flex-shrink-0">
+                                        <div class="text-xl font-bold text-gray-400">+{{ comp.task.reward }}</div>
+                                        <div class="text-gray-400 text-xs">ECO (ожидает)</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Active Tasks -->
         <div class="mb-6">
             <div class="flex items-center mb-4">
                 <i class="material-icons text-2xl eco-green mr-2">pending_actions</i>
                 <h3 class="text-2xl font-bold text-gray-800">Доступные задания</h3>
                 <span class="ml-auto text-gray-600 text-sm">{{ active_tasks_count }} шт.</span>
             </div>
-
             <div class="space-y-3">
                 {% for task in tasks %}
                     <a href="{% url 'eco_task_details' task.id %}" class="block">
@@ -81,7 +120,7 @@
             </div>
         </div>
 
-        <!-- Completed Tasks History (ПОСЛЕДНИЕ ВЫПОЛНЕННЫЕ ИЗ БД) -->
+        <!-- Completed Tasks History -->
         <div class="bg-white rounded-xl shadow-md p-5">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-xl font-bold text-gray-800">Последние выполненные</h3>
@@ -96,7 +135,7 @@
                             <i class="material-icons text-xl eco-green mr-3">check_circle</i>
                             <div>
                                 <div class="text-gray-800 font-semibold text-sm">{{ completion.task.title }}</div>
-                                <div class="text-gray-500 text-xs">{{ completion.created_at|date:"d.m.Y, H:i" }}</div>
+                                <div class="text-gray-500 text-xs">{{ completion.reviewed_at|date:"d.m.Y, H:i" }}</div>
                             </div>
                         </div>
                         <div class="text-right">

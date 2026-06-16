@@ -22,7 +22,6 @@
 {% block content_block_1 %}
     <div class="px-12 py-8 bg-gray-50">
         <div class="max-w-2xl mx-auto">
-
             <a href="{% url 'eco_tasks_tracker' %}"
                class="inline-flex items-center text-gray-600 hover:text-green-600 mb-6 transition">
                 <i class="material-icons mr-1" style="font-size: 20px;">arrow_back</i> К списку заданий
@@ -52,46 +51,50 @@
                 <div class="p-6">
                     <p class="text-gray-700 leading-relaxed text-lg mb-4">{{ task.description }}</p>
 
-                    <!-- БЛОК ФОРМЫ ДЛЯ ВВОДА ДОКАЗАТЕЛЬСТВ -->
-                    <div id="proof-section" class="hidden mt-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
-
-                        <!-- Если тип: Ввод кода -->
-                        <div id="input-text-code" class="hidden">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Введите код (или текст с
-                                QR-кода):</label>
-                            <label for="proof_text"></label><input type="text" id="proof_text" name="proof_text"
-                                                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none text-center text-lg font-mono tracking-widest"
-                                                                   placeholder="Например: ABC123" autocomplete="off">
+                    <!-- БЛОК ФОРМЫ (показывается только если задание ещё не сдано) -->
+                    {% if not is_pending %}
+                        <div id="proof-section" class="hidden mt-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                            <div id="input-text-code" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Введите код (или текст с
+                                    QR-кода):</label>
+                                <input type="text" id="proof_text" name="proof_text"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none text-center text-lg font-mono tracking-widest"
+                                       placeholder="Например: ABC123" autocomplete="off">
+                            </div>
+                            <div id="input-photo" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Прикрепите
+                                    фотографию:</label>
+                                <input type="file" id="proof_image" name="proof_image" accept="image/*"
+                                       capture="environment"
+                                       class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                                <p class="text-xs text-gray-400 mt-2">На мобильном устройстве откроется камера для
+                                    съемки напрямую.</p>
+                                <img id="image-preview" src="#" alt="Preview"
+                                     class="hidden mt-4 max-h-48 rounded-lg shadow-md mx-auto">
+                            </div>
                         </div>
-
-                        <!-- Если тип: Фото -->
-                        <div id="input-photo" class="hidden">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Прикрепите фотографию:</label>
-                            <input type="file" id="proof_image" name="proof_image" accept="image/*"
-                                   capture="environment"
-                                   class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
-                            <p class="text-xs text-gray-400 mt-2">На мобильном устройстве откроется камера для съемки
-                                напрямую.</p>
-                            <img id="image-preview" src="#" alt="Preview"
-                                 class="hidden mt-4 max-h-48 rounded-lg shadow-md mx-auto">
-                        </div>
-                    </div>
+                    {% endif %}
                 </div>
 
                 <div class="p-6 bg-gray-50 border-t border-gray-100" id="action-area">
-                    {% if is_completed %}
-                        <div class="flex items-center bg-green-50 p-4 rounded-xl border border-green-200">
-                            <i class="material-icons text-3xl eco-green mr-4">check_circle</i>
+                    {% if is_pending %}
+                        <div class="flex items-center bg-yellow-50 p-4 rounded-xl border border-yellow-200">
+                            <i class="material-icons text-3xl text-yellow-600 mr-4">hourglass_top</i>
                             <div>
-                                <h4 class="font-bold text-gray-800">Задание выполнено!</h4>
-                                <p class="text-gray-600 text-sm">Эко-коины зачислены.</p>
+                                <h4 class="font-bold text-gray-800">Задание на проверке</h4>
+                                <p class="text-gray-600 text-sm">Ожидайте одобрения модератором. Баллы будут начислены
+                                    после проверки.</p>
+                                {% if completion_status == 'ai_rejected' and ai_feedback %}
+                                    <p class="text-red-500 text-xs mt-1">Комментарий
+                                        ИИ: {{ ai_feedback|truncatewords:15 }}</p>
+                                {% endif %}
                             </div>
                         </div>
                     {% else %}
                         <button class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-4 rounded-xl transition shadow-md flex items-center justify-center text-lg"
                                 id="complete-task-btn" data-task-id="{{ task.id }}"
                                 data-task-type="{{ task.task_type.code|default:'trust' }}">
-                            <i class="material-icons mr-2">bolt</i> Выполнить и получить награду
+                            <i class="material-icons mr-2">bolt</i> Отправить на проверку
                         </button>
                     {% endif %}
                 </div>
@@ -101,7 +104,7 @@
 {% endblock %}
 
 {% block extra_js %}
-    {% if not is_completed %}
+    {% if not is_pending %}
         <script src="{% static 'marketplace/eco_tasks_details.js' %}"></script>
     {% endif %}
 {% endblock %}

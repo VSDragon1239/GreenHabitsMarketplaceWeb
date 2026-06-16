@@ -1,9 +1,11 @@
 document.addEventListener('DOMContentLoaded', function () {
     const btn = document.getElementById('complete-task-btn');
+    if (!btn) return;
+
     const taskType = btn.getAttribute('data-task-type');
     const proofSection = document.getElementById('proof-section');
 
-    // 1. Показываем нужное поле ввода в зависимости от типа
+    // 1. Показываем нужное поле ввода
     if (taskType === 'text_code') {
         proofSection.classList.remove('hidden');
         document.getElementById('input-text-code').classList.remove('hidden');
@@ -11,7 +13,6 @@ document.addEventListener('DOMContentLoaded', function () {
         proofSection.classList.remove('hidden');
         document.getElementById('input-photo').classList.remove('hidden');
 
-        // Превью фото
         const fileInput = document.getElementById('proof_image');
         const imgPreview = document.getElementById('image-preview');
         fileInput.addEventListener('change', function (e) {
@@ -26,10 +27,8 @@ document.addEventListener('DOMContentLoaded', function () {
     // 2. Обработка отправки
     btn.addEventListener('click', function () {
         if (btn.disabled) return;
-        btn.disabled = true;
         const taskId = btn.getAttribute('data-task-id');
 
-        // Валидация полей перед отправкой
         if (taskType === 'text_code' && !document.getElementById('proof_text').value) {
             alert('Пожалуйста, введите код!');
             return;
@@ -40,11 +39,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         btn.disabled = true;
-        btn.innerHTML = `<svg class="animate-spin h-5 w-5 mr-3 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Отправка proofs...`;
+        btn.innerHTML = `<svg class="animate-spin h-5 w-5 mr-3 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Отправка...`;
 
-        // ВАЖНО: Используем FormData, чтобы отправлять файлы!
         const formData = new FormData();
-        formData.append('csrfmiddlewaretoken', getCookie('csrftoken')); // Ваша функция getCookie
+        formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
 
         if (taskType === 'text_code') {
             formData.append('proof_text', document.getElementById('proof_text').value);
@@ -55,31 +53,29 @@ document.addEventListener('DOMContentLoaded', function () {
 
         fetch(`/main/green-zabgu/eco-tasks/complete/${taskId}/`, {
             method: 'POST',
-            body: formData, // Не указываем Content-Type, браузер сам вставит boundary
+            body: formData,
         })
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
                     document.getElementById('action-area').innerHTML = `
-                                <div class="flex items-center bg-green-50 p-4 rounded-xl border border-green-200">
-                                    <i class="material-icons text-3xl eco-green mr-4">check_circle</i>
+                                <div class="flex items-center bg-yellow-50 p-4 rounded-xl border border-yellow-200">
+                                    <i class="material-icons text-3xl text-yellow-600 mr-4">hourglass_top</i>
                                     <div>
                                         <h4 class="font-bold text-gray-800">${data.message}</h4>
-                                        <p class="text-gray-600 text-sm mt-1">Баланс обновлен!</p>
+                                        <p class="text-gray-600 text-sm mt-1">Ожидает модерации.</p>
                                     </div>
                                 </div>`;
-                    const balanceEl = document.getElementById('eco-balance-display');
-                    if (balanceEl) balanceEl.innerText = data.new_balance;
                 } else {
-                    alert(data.error || 'Ошибка');
+                    alert(data.error || 'Ошибка отправки');
                     btn.disabled = false;
-                    btn.innerHTML = '<i class="material-icons mr-2">bolt</i> Выполнить и получить награду';
+                    btn.innerHTML = '<i class="material-icons mr-2">bolt</i> Отправить на проверку';
                 }
             })
             .catch(() => {
                 alert('Сетевая ошибка');
                 btn.disabled = false;
-                btn.innerHTML = '<i class="material-icons mr-2">bolt</i> Выполнить и получить награду';
+                btn.innerHTML = '<i class="material-icons mr-2">bolt</i> Отправить на проверку';
             });
     });
 });
